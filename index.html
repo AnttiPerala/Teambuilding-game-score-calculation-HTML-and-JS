@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Team Scoring — Minimal Round Entry</title>
+<style>
+  :root{
+    --bg:#0b0f1a; --panel:#121831; --muted:#9aa6bf; --text:#eaf1ff;
+    --accent:#7acbff; --accent2:#9bffb5; --ring:#31407b; --chip:#1a2250;
+    --good:#1dd1a1; --ok:#ffd166; --bad:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:radial-gradient(1200px 800px at 10% -10%, #1c2a55 0%, transparent 55%),
+               radial-gradient(1400px 900px at 110% 0%, #262665 0%, transparent 55%), var(--bg);
+    color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  }
+  .wrap{max-width:820px; margin:0 auto; padding:20px 16px 40px}
+  header{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px}
+  .groups{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .pill{background:var(--chip); border:1px solid rgba(255,255,255,.08); padding:6px 10px; border-radius:999px; font-weight:700; font-size:13px}
+  .score{font-variant-numeric:tabular-nums}
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,.03), transparent); border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:16px; box-shadow:0 10px 28px rgba(0,0,0,.3)}
+  h1{font-size:18px; margin:0 0 2px 0}
+  .sub{color:var(--muted); font-size:13px; margin:0 0 8px 0}
+
+  .turn{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0}
+  .turn .who{font-weight:800; font-size:16px}
+  .turn .card{color:var(--muted)}
+
+  .grid{display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px}
+  @media (min-width:560px){ .grid{grid-template-columns: repeat(4, 1fr);} }
+  label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px}
+  input[type=number], input[type=text]{
+    width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12);
+    background:#151b3a; color:var(--text); outline:none;
+  }
+  input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(122,203,255,.18)}
+
+  .sumrow{display:flex; align-items:center; justify-content:space-between; margin-top:8px}
+  .sumrow .state{font-size:12px}
+  .state.ok{color:var(--good)} .state.warn{color:var(--ok)} .state.bad{color:var(--bad)}
+
+  .actions{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap}
+  button{border:none; border-radius:12px; padding:10px 14px; font-weight:800; cursor:pointer}
+  .primary{background:linear-gradient(135deg,#4b7bd8,#7acbff); color:#061127}
+  .secondary{background:linear-gradient(135deg,#273061,#333a7d); color:#d6dcff}
+  .quiet{background:transparent; border:1px solid rgba(255,255,255,.14); color:#cfd8ff}
+
+  .progress{height:10px; border-radius:8px; background:#0f1430; overflow:hidden; margin:10px 0; border:1px solid rgba(255,255,255,.12)}
+  .progress > div{height:100%; background:linear-gradient(90deg,#7acbff,#9bffb5); width:0%}
+
+  .overlay{
+    position:fixed; inset:0; background:rgba(5,8,16,.7);
+    display:none; align-items:center; justify-content:center; padding:16px;
+  }
+  .modal{max-width:720px; width:100%; background:#121831; border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:16px}
+  .list{margin:10px 0 0 0; padding:0; list-style:none}
+  .li{display:flex; justify-content:space-between; gap:8px; padding:8px 10px; border-radius:10px; background:#0f1636; border:1px solid rgba(255,255,255,.06); margin-bottom:8px}
+  .delta.good{color:var(--good)} .delta.warn{color:var(--ok)} .delta.bad{color:var(--bad)}
+
+  details.settings{margin-top:14px}
+  details.settings summary{cursor:pointer; color:var(--muted)}
+  .setgrid{display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px}
+  .row{display:flex; gap:8px; align-items:center; margin-bottom:6px}
+  select{width:100%; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#151b3a; color:var(--text)}
+
+  /* Setup screen */
+  .setup{max-width:720px; margin:24px auto}
+  .setup h2{margin:0 0 10px 0; font-size:18px}
+  .setup .grid{grid-template-columns:1fr 1fr}
+  @media(min-width:720px){ .setup .grid{grid-template-columns: repeat(4, 1fr);} }
+  .muted{color:var(--muted); font-size:12px}
+</style>
+</head>
+<body>
+  <div class="wrap" id="app" style="display:none">
+    <header>
+      <div>
+        <h1>Minimal Round Entry</h1>
+        <p class="sub">Enter one card at a time. Points start at 0; more is better.</p>
+      </div>
+      <div class="groups">
+        <span class="pill"><span id="g1n">Group 1</span>: <span class="score" id="g1s">0</span></span>
+        <span class="pill"><span id="g2n">Group 2</span>: <span class="score" id="g2s">0</span></span>
+        <span class="pill" id="progressPill" style="display:none">Progress: <span id="progTxt">0%</span></span>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div id="progressWrap" class="progress" style="display:none"><div id="progBar"></div></div>
+
+      <div class="turn">
+        <div class="who" id="turnWho">Team 1</div>
+        <div class="card" id="turnCard">Card 1 / 4</div>
+      </div>
+
+      <div class="grid" id="inputs">
+        <!-- four inputs injected -->
+      </div>
+
+      <div class="sumrow">
+        <div class="state" id="sumState">Sum: 0 / 20</div>
+        <div class="state" id="sumHint">Enter all four values</div>
+      </div>
+
+      <div class="actions">
+        <button class="quiet" id="prevTeam">Prev team</button>
+        <button class="quiet" id="nextTeam">Next team</button>
+        <button class="secondary" id="prevCard">Back</button>
+        <button class="primary" id="lockCard" disabled>Lock card</button>
+      </div>
+
+      <details class="settings">
+        <summary>Settings (setup, groups & stage assignment)</summary>
+        <div class="setgrid">
+          <div>
+            <label>Group 1 name</label>
+            <input type="text" id="g1input" />
+          </div>
+          <div>
+            <label>Group 2 name</label>
+            <input type="text" id="g2input" />
+          </div>
+          <div>
+            <label>Participants (optional)</label>
+            <input type="number" id="participantsInput" min="0" step="1" />
+            <div class="muted">If set, progress bar shows cards locked vs participants.</div>
+          </div>
+          <div>
+            <label>Skills</label>
+            <div class="grid" id="skillsEditor"></div>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="row" style="font-size:12px; color:var(--muted); margin-bottom:8px">
+            Stage assignment — which group gets points for each team & stage
+          </div>
+          <div id="assignRows"></div>
+        </div>
+        <div class="actions" style="margin-top:10px">
+          <button class="quiet" id="resetRound">Reset round</button>
+          <button class="quiet" id="restartSetup">Restart setup</button>
+        </div>
+      </details>
+    </section>
+  </div>
+
+  <!-- Setup screen -->
+  <div class="wrap setup" id="setup">
+    <div class="panel">
+      <h2>Game Setup</h2>
+      <p class="sub">Enter the four skill names and (optionally) the number of participants (cards this session).</p>
+      <div class="grid">
+        <div><label>Skill 1</label><input type="text" id="s0" placeholder="Visual" /></div>
+        <div><label>Skill 2</label><input type="text" id="s1" placeholder="Sound" /></div>
+        <div><label>Skill 3</label><input type="text" id="s2" placeholder="Programming" /></div>
+        <div><label>Skill 4</label><input type="text" id="s3" placeholder="Project Management" /></div>
+      </div>
+      <div style="margin-top:10px; max-width:420px">
+        <label>Participants (optional)</label>
+        <input type="number" id="setupParticipants" min="0" step="1" placeholder="e.g., 24" />
+        <div class="muted">Used for a session progress bar (cards entered / participants).</div>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button class="primary" id="startGame">Start</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback overlay -->
+  <div class="overlay" id="fbOverlay">
+    <div class="modal">
+      <div id="fbHeader" style="font-weight:800; font-size:16px">Stage feedback</div>
+      <div id="fbSub" class="sub" style="margin-top:4px"></div>
+      <div class="progress" style="margin-top:10px"><div id="fbProgress"></div></div>
+      <ul class="list" id="fbList"></ul>
+      <div class="actions" style="margin-top:10px; justify-content:flex-end">
+        <button class="primary" id="fbContinue">Continue</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const TEAMS_COUNT = 4;
+  const STAGES = [
+    {name:"Pair", target:10, max:40, needCard:1},
+    {name:"Triplet", target:15, max:60, needCard:2},
+    {name:"Quartet", target:20, max:80, needCard:3}
+  ];
+
+  const state = migrate(loadState()) || defaultState();
+
+  // Elements
+  const app = document.getElementById('app');
+  const setup = document.getElementById('setup');
+
+  const g1n = document.getElementById('g1n');
+  const g2n = document.getElementById('g2n');
+  const g1s = document.getElementById('g1s');
+  const g2s = document.getElementById('g2s');
+  const progressWrap = document.getElementById('progressWrap');
+  const progressPill = document.getElementById('progressPill');
+  const progBar = document.getElementById('progBar');
+  const progTxt = document.getElementById('progTxt');
+
+  const turnWho = document.getElementById('turnWho');
+  const turnCard = document.getElementById('turnCard');
+  const inputs = document.getElementById('inputs');
+  const sumState = document.getElementById('sumState');
+  const sumHint = document.getElementById('sumHint');
+  const prevCardBtn = document.getElementById('prevCard');
+  const lockBtn = document.getElementById('lockCard');
+  const prevTeamBtn = document.getElementById('prevTeam');
+  const nextTeamBtn = document.getElementById('nextTeam');
+
+  const g1input = document.getElementById('g1input');
+  const g2input = document.getElementById('g2input');
+  const participantsInput = document.getElementById('participantsInput');
+  const skillsEditor = document.getElementById('skillsEditor');
+
+  const assignRows = document.getElementById('assignRows');
+  const resetRoundBtn = document.getElementById('resetRound');
+  const restartSetupBtn = document.getElementById('restartSetup');
+
+  const fbOverlay = document.getElementById('fbOverlay');
+  const fbHeader = document.getElementById('fbHeader');
+  const fbSub = document.getElementById('fbSub');
+  const fbList = document.getElementById('fbList');
+  const fbProgress = document.getElementById('fbProgress');
+  const fbContinue = document.getElementById('fbContinue');
+
+  const s0 = document.getElementById('s0');
+  const s1 = document.getElementById('s1');
+  const s2 = document.getElementById('s2');
+  const s3 = document.getElementById('s3');
+  const setupParticipants = document.getElementById('setupParticipants');
+  const startGame = document.getElementById('startGame');
+
+  // Setup screen defaults from state (if any)
+  [s0.value, s1.value, s2.value, s3.value] = state.skills;
+  if(state.participants>0) setupParticipants.value = state.participants;
+
+  startGame.addEventListener('click', ()=>{
+    const skills = [
+      s0.value.trim() || "Visual",
+      s1.value.trim() || "Sound",
+      s2.value.trim() || "Programming",
+      s3.value.trim() || "Project Management",
+    ];
+    state.skills = skills;
+    const p = parseInt(setupParticipants.value,10);
+    state.participants = Number.isFinite(p) && p>=0 ? p : 0;
+    state.setupDone = true;
+    saveState();
+    mountApp();
+  });
+
+  restartSetupBtn.addEventListener('click', ()=>{
+    if(!confirm('Return to setup? You can resume later; data stays saved.')) return;
+    state.setupDone = false;
+    saveAndRender();
+  });
+
+  function mountApp(){
+    setup.style.display = 'none';
+    app.style.display = 'block';
+    initAppUI();
+    render();
+  }
+  function mountSetup(){
+    app.style.display = 'none';
+    setup.style.display = 'block';
+  }
+
+  // App init
+  if(state.setupDone) mountApp(); else mountSetup();
+
+  function initAppUI(){
+    g1n.textContent = state.groupNames[0];
+    g2n.textContent = state.groupNames[1];
+    g1input.value = state.groupNames[0];
+    g2input.value = state.groupNames[1];
+
+    g1input.addEventListener('input', () => { state.groupNames[0] = g1input.value || "Group 1"; g1n.textContent = state.groupNames[0]; saveAndRender(); });
+    g2input.addEventListener('input', () => { state.groupNames[1] = g2input.value || "Group 2"; g2n.textContent = state.groupNames[1]; saveAndRender(); });
+
+    participantsInput.value = state.participants || '';
+    participantsInput.addEventListener('input', ()=>{
+      const p = parseInt(participantsInput.value,10);
+      state.participants = Number.isFinite(p) && p>=0 ? p : 0;
+      saveAndRender();
+    });
+
+    // Skills editor
+    skillsEditor.innerHTML='';
+    state.skills.forEach((name, idx)=>{
+      const d = document.createElement('div');
+      const inp = document.createElement('input'); inp.type='text'; inp.value=name;
+      inp.addEventListener('input', ()=>{ state.skills[idx] = inp.value || `Skill ${idx+1}`; saveAndRender(); });
+      d.appendChild(inp); skillsEditor.appendChild(d);
+    });
+
+    buildAssignRows();
+
+    prevTeamBtn.addEventListener('click', ()=> { changeTeam(-1); });
+    nextTeamBtn.addEventListener('click', ()=> { changeTeam(1); });
+    prevCardBtn.addEventListener('click', ()=> { changeCard(-1); });
+    lockBtn.addEventListener('click', onLockCard);
+    resetRoundBtn.addEventListener('click', ()=>{
+      if(!confirm('Reset the whole round? All inputs & locks will be cleared.')) return;
+      const fresh = defaultState();
+      fresh.setupDone = state.setupDone;
+      fresh.groupNames = state.groupNames.slice();
+      fresh.skills = state.skills.slice();
+      fresh.participants = state.participants;
+      Object.assign(state, fresh);
+      saveAndRender();
+    });
+    fbContinue.addEventListener('click', ()=>{
+      fbOverlay.style.display='none';
+      // advance to next card or team happened already on lock; render shows next turn
+      render();
+    });
+  }
+
+  function defaultState(){
+    const teams = [];
+    for(let i=0;i<TEAMS_COUNT;i++){
+      const pairTo = (i % 2 === 0) ? 1 : 0;
+      const tripTo = 1 - pairTo;
+      const quadTo = pairTo;
+      teams.push({
+        cards: [
+          [0,0,0,0],
+          [0,0,0,0],
+          [0,0,0,0],
+          [0,0,0,0],
+        ],
+        locked: [false,false,false,false],
+        pairToGroup: pairTo,
+        tripToGroup: tripTo,
+        quadToGroup: quadTo,
+      });
+    }
+    return {
+      setupDone: false,
+      skills: ["Visual","Sound","Programming","Project Management"],
+      participants: 0,
+      groupNames: ["Group 1","Group 2"],
+      currentTeam: 0,
+      currentCard: 0,
+      teams
+    };
+  }
+
+  function migrate(st){
+    if(!st) return null;
+    st.teams?.forEach((t,i)=>{
+      if(!Array.isArray(t.cards) || t.cards.length<4){
+        const missing = 4 - (t.cards?.length || 0);
+        t.cards = (t.cards || []);
+        for(let k=0;k<missing;k++) t.cards.push([0,0,0,0]);
+      }
+      if(!Array.isArray(t.locked) || t.locked.length<4){
+        const missing = 4 - (t.locked?.length || 0);
+        t.locked = (t.locked || []);
+        for(let k=0;k<missing;k++) t.locked.push(false);
+      }
+      if(typeof t.quadToGroup !== 'number'){
+        const pairTo = (typeof t.pairToGroup==='number')?t.pairToGroup:((i%2===0)?1:0);
+        t.quadToGroup = pairTo;
+      }
+    });
+    if(!Array.isArray(st.skills) || st.skills.length!==4) st.skills = ["Visual","Sound","Programming","Project Management"];
+    if(typeof st.participants!=='number') st.participants = 0;
+    if(typeof st.currentTeam!=='number') st.currentTeam = 0;
+    if(typeof st.currentCard!=='number') st.currentCard = 0;
+    if(!Array.isArray(st.groupNames)) st.groupNames = ["Group 1","Group 2"];
+    if(typeof st.setupDone!=='boolean') st.setupDone = false;
+    return st;
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem('tb_scoring_min_v2');
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      if(!parsed || !Array.isArray(parsed.teams)) return null;
+      return parsed;
+    }catch(e){ return null; }
+  }
+  function saveState(){ localStorage.setItem('tb_scoring_min_v2', JSON.stringify(state)); }
+  function saveAndRender(){ saveState(); render(); }
+
+  function buildAssignRows(){
+    assignRows.innerHTML = '';
+    state.teams.forEach((t,i)=>{
+      const row = document.createElement('div'); row.className='row';
+      const label = document.createElement('div'); label.style.minWidth='64px'; label.textContent = `Team ${i+1}`;
+      const sel1 = makeSel([state.groupNames[0], state.groupNames[1]], t.pairToGroup);
+      const sel2 = makeSel([state.groupNames[0], state.groupNames[1]], t.tripToGroup);
+      const sel3 = makeSel([state.groupNames[0], state.groupNames[1]], t.quadToGroup);
+      sel1.addEventListener('change', e=>{ t.pairToGroup = parseInt(e.target.value,10); saveAndRender(); });
+      sel2.addEventListener('change', e=>{ t.tripToGroup = parseInt(e.target.value,10); saveAndRender(); });
+      sel3.addEventListener('change', e=>{ t.quadToGroup = parseInt(e.target.value,10); saveAndRender(); });
+      row.appendChild(label);
+      row.appendChild(wrapSel("Pair →", sel1));
+      row.appendChild(wrapSel("Triplet →", sel2));
+      row.appendChild(wrapSel("Quartet →", sel3));
+      assignRows.appendChild(row);
+    });
+  }
+  function makeSel(options, selectedIndex){
+    const sel = document.createElement('select');
+    options.forEach((opt, idx)=>{
+      const o = document.createElement('option'); o.value = idx; o.textContent = opt; if(idx===selectedIndex) o.selected=true; sel.appendChild(o);
+    });
+    return sel;
+  }
+  function wrapSel(lbl, sel){
+    const d = document.createElement('div'); d.style.display='flex'; d.style.alignItems='center'; d.style.gap='6px';
+    const s = document.createElement('span'); s.style.fontSize='12px'; s.style.color='var(--muted)'; s.textContent = lbl;
+    d.appendChild(s); d.appendChild(sel); return d;
+  }
+
+  function render(){
+    if(!state.setupDone){ mountSetup(); return; }
+
+    // header group names & scores
+    g1n.textContent = state.groupNames[0];
+    g2n.textContent = state.groupNames[1];
+
+    // Progress bar (cards locked vs participants)
+    const lockedCards = state.teams.reduce((acc,t)=> acc + t.locked.filter(Boolean).length, 0);
+    if(state.participants && state.participants>0){
+      const pct = Math.max(0, Math.min(100, Math.round((lockedCards / state.participants)*100)));
+      progressWrap.style.display = 'block';
+      progressPill.style.display = 'inline-block';
+      progBar.style.width = pct + '%';
+      progTxt.textContent = pct + '%';
+    } else {
+      progressWrap.style.display = 'none';
+      progressPill.style.display = 'none';
+    }
+
+    // Update turn display
+    turnWho.textContent = `Team ${state.currentTeam+1}`;
+    turnCard.textContent = `Card ${state.currentCard+1} / 4`;
+
+    // Build four inputs for current card using custom skill names
+    inputs.innerHTML = '';
+    const team = state.teams[state.currentTeam];
+    const cardIdx = state.currentCard;
+
+    state.skills.forEach((skill, sIdx)=>{
+      const wrap = document.createElement('div');
+      const lab = document.createElement('label'); lab.textContent = skill;
+      const inp = document.createElement('input'); inp.type='number'; inp.min='0'; inp.max='20'; inp.step='1';
+      inp.value = team.cards[cardIdx][sIdx];
+      inp.addEventListener('input', ()=>{
+        team.cards[cardIdx][sIdx] = toNum(inp.value);
+        updateSumState();
+        saveState();
+      });
+      wrap.appendChild(lab); wrap.appendChild(inp);
+      inputs.appendChild(wrap);
+    });
+
+    updateSumState();
+
+    // buttons
+    prevCardBtn.disabled = (cardIdx === 0);
+    lockBtn.disabled = !canLockCard(team.cards[cardIdx]);
+
+    // recompute all totals from locked cards and show header totals
+    const totals = computeTotals();
+    g1s.textContent = totals[0];
+    g2s.textContent = totals[1];
+  }
+
+  function updateSumState(){
+    const team = state.teams[state.currentTeam];
+    const card = team.cards[state.currentCard];
+    const sum = card.reduce((a,b)=>a+toNum(b),0);
+    sumState.textContent = `Sum: ${sum} / 20`;
+    if(sum === 20){ sumHint.textContent = 'Looks good – ready to lock'; sumHint.className='state ok'; }
+    else if(sum < 20){ sumHint.textContent = `Under by ${20 - sum}`; sumHint.className='state warn'; }
+    else { sumHint.textContent = `Over by ${sum - 20}`; sumHint.className='state bad'; }
+  }
+
+  function canLockCard(arr){ return arr.reduce((a,b)=>a+toNum(b),0) === 20; }
+
+  function onLockCard(){
+    const t = state.teams[state.currentTeam];
+    t.locked[state.currentCard] = true;
+
+    // If we just locked card 2/3/4, compute stage feedback
+    const c = state.currentCard;
+    let fbInfo = null;
+    if(c >= 1){ fbInfo = stageResult(state.currentTeam, c); }
+
+    // advance next step
+    if(state.currentCard < 3){
+      state.currentCard += 1;
+    } else {
+      state.currentCard = 0;
+      state.currentTeam = (state.currentTeam + 1) % TEAMS_COUNT;
+    }
+    saveState();
+
+    // Show feedback overlay if stage
+    if(fbInfo){
+      showFeedback(fbInfo);
+    } else {
+      render();
+    }
+  }
+
+  function showFeedback(fbInfo){
+    fbHeader.textContent = `${fbInfo.stageName} — ${fbInfo.points}/${fbInfo.max} pts`;
+    fbSub.textContent = fbInfo.text;
+    fbProgress.style.width = `${Math.round(fbInfo.percent)}%`;
+    fbList.innerHTML = '';
+    fbInfo.lines.forEach(line => {
+      const li = document.createElement('li'); li.className='li';
+      const left = document.createElement('div'); left.textContent = line.skill;
+      const right = document.createElement('div'); right.className = 'delta ' + line.class; right.textContent = line.deltaText;
+      li.appendChild(left); li.appendChild(right);
+      fbList.appendChild(li);
+    });
+    fbOverlay.style.display='flex';
+  }
+
+  function changeTeam(delta){
+    state.currentTeam = (state.currentTeam + delta + TEAMS_COUNT) % TEAMS_COUNT;
+    saveAndRender();
+  }
+  function changeCard(delta){
+    state.currentCard = Math.min(3, Math.max(0, state.currentCard + delta));
+    saveAndRender();
+  }
+
+  function toNum(v){ const n = parseInt(v,10); return Number.isFinite(n) ? n : 0; }
+
+  function computeTotals(){
+    let totals = [0,0];
+    state.teams.forEach((t)=>{
+      if(t.locked[0] && t.locked[1]) totals[t.pairToGroup] += stagePoints(10, [0,1], t);
+      if(t.locked[0] && t.locked[1] && t.locked[2]) totals[t.tripToGroup] += stagePoints(15, [0,1,2], t);
+      if(t.locked[0] && t.locked[1] && t.locked[2] && t.locked[3]) totals[t.quadToGroup] += stagePoints(20, [0,1,2,3], t);
+    });
+    return totals;
+  }
+
+  function stagePoints(target, cardIdxs, t){
+    let pts = 0;
+    for(let s=0;s<4;s++){
+      let sum = 0;
+      for(const ci of cardIdxs) sum += toNum(t.cards[ci][s]);
+      pts += (target - Math.abs(target - sum));
+    }
+    return pts;
+  }
+
+  function stageResult(teamIndex, justLockedCardIdx){
+    const t = state.teams[teamIndex];
+    let cfg = null;
+    if(justLockedCardIdx === 1) cfg = {name:"Pair", target:10, cards:[0,1], max:40};
+    if(justLockedCardIdx === 2) cfg = {name:"Triplet", target:15, cards:[0,1,2], max:60};
+    if(justLockedCardIdx === 3) cfg = {name:"Quartet", target:20, cards:[0,1,2,3], max:80};
+    if(!cfg) return null;
+
+    // Per-skill breakdown
+    let points = 0;
+    const lines = [];
+    for(let s=0;s<4;s++){
+      let sum = 0;
+      for(const ci of cfg.cards) sum += toNum(t.cards[ci][s]);
+      const delta = sum - cfg.target; // positive = over target, negative = under
+      const absd = Math.abs(delta);
+      const per = (cfg.target - absd); if(per>0) points += per;
+      let cls = 'bad';
+      if(absd === 0) cls = 'good'; else if(absd <= 2) cls = 'warn';
+      const deltaText = (delta===0) ? 'On target' : (delta>0 ? `+${delta} over` : `${delta} under`);
+      lines.push({skill: state.skills[s], class: cls, deltaText});
+    }
+    const percent = (points / cfg.max) * 100;
+    let text = '';
+    if(percent === 100) text = 'Perfect balance!';
+    else if(percent >= 85) text = 'Excellent balance — very close to target.';
+    else if(percent >= 70) text = 'Good! Some room to optimize.';
+    else if(percent >= 50) text = 'Fair — consider re-balancing skills more evenly.';
+    else text = 'Needs work — skills are far from the target.';
+
+    return { stageName: cfg.name, points, max: cfg.max, percent, text, lines };
+  }
+})();
+</script>
+</body>
+</html>
