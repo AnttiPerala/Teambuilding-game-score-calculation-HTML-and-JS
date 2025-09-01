@@ -18,7 +18,7 @@
     color:var(--text);
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
   }
-  .wrap{max-width:940px; margin:0 auto; padding:20px 16px 120px; min-height:100vh; display:flex; flex-direction:column;}
+  .wrap{max-width:1400px; margin:0 auto; padding:20px 16px 120px; min-height:100vh; display:flex; flex-direction:column;}
   .main-center{flex:1; display:flex; align-items:center; justify-content:center; padding:48px 0 80px;}
   header{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px}
   .groups{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
@@ -29,12 +29,16 @@
   .sub{color:var(--muted); font-size:13px; margin:0 0 8px 0}
   .muted{color:var(--muted); font-size:12px}
 
+
   .turn{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0}
   .turn .who{font-weight:800; font-size:16px}
   .turn .card{color:var(--muted)}
+  div#turnPrompt {
+    margin: 2rem;
+}
 
   .grid{display:grid; gap:10px; margin-top:10px}
-  .cardgrid{grid-template-columns: 1.2fr repeat(4, 1fr);}
+  .cardgrid{grid-template-columns: 1.2fr repeat(4, 1fr); margin: 2rem;}
   @media (max-width:720px){ .cardgrid{grid-template-columns: 1fr 1fr;} }
   label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px}
   input[type=number], input[type=text]{
@@ -43,7 +47,7 @@
   }
   input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(122,203,255,.18)}
 
-  .sumrow{display:flex; align-items:center; justify-content:space-between; margin-top:8px}
+  .sumrow{display:flex; align-items:center; justify-content:space-between; margin: 2rem;}
   .sumrow .state{font-size:12px}
   .state.ok{color:var(--good)} .state.warn{color:var(--ok)} .state.bad{color:var(--bad)}
 
@@ -86,6 +90,20 @@
   .intakeHeader{display:flex; align-items:center; justify-content:space-between; gap:10px}
   .sumtag{font-size:12px; font-weight:800}
   .sumtag.ok{color:var(--good)} .sumtag.warn{color:var(--ok)} .sumtag.bad{color:var(--bad)}
+
+  span.accent {
+    font-size: 1.5rem;
+    color: var(--ok);
+}
+
+.grayed {
+    font-size: 1rem;
+    color: var(--muted);
+}
+
+#settingsFooter {
+    background-color: black;
+}
 </style>
 </head>
 <body>
@@ -606,7 +624,7 @@ document.addEventListener('DOMContentLoaded', function(){
     turnWho.textContent = `Now creating Team ${tIdx+1}`; turnCard.textContent = `Card ${cIdx+1} / 4`;
     if (turnPrompt){
       const gname = state.groupNames[tIdx%2];
-      if(cIdx===0){ turnPrompt.innerHTML = `<span class="accent">${gname}</span> (no points this card), pick a card`; }
+      if(cIdx===0){ turnPrompt.innerHTML = `<span class="accent">${gname}</span>, pick a card <span class="grayed">(no points this card)</span>`; }
       else { turnPrompt.innerHTML = `<span class="accent">${gname}</span>, pick a card`; }
     }
 
