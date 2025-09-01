@@ -4,939 +4,687 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Team Scoring — Complete Build</title>
+<title>Team-Building Card Game — Minimal Round Entry</title>
 <style>
   :root{
-    --bg:#0b0f1a; --panel:#121831; --muted:#9aa6bf; --text:#eaf1ff;
-    --accent:#7acbff; --accent2:#9bffb5; --ring:#31407b; --chip:#1a2250;
-    --good:#1dd1a1; --ok:#ffd166; --bad:#ff6b6b;
+    --bg:#0b0f14;
+    --panel:#0f1620;
+    --panel-2:#0d1219;
+    --text:#e6f0ff;
+    --muted:#9fb3cc;
+    --accent:#60a5fa;
+    --accent-2:#22d3ee;
+    --accent-3:#a78bfa;
+    --good:#22c55e;
+    --warn:#fbbf24;
+    --bad:#ef4444;
+    --border:#1f2937;
+    --r:14px;
+    --bezier:cubic-bezier(.2,.7,.2,1);
   }
   *{box-sizing:border-box}
+  html,body{height:100%}
   body{
-    margin:0; background:radial-gradient(1200px 800px at 10% -10%, #1c2a55 0%, transparent 55%),
-               radial-gradient(1400px 900px at 110% 0%, #262665 0%, transparent 55%), var(--bg);
+    margin:0;
+    font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,"Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji";
     color:var(--text);
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    background:
+      radial-gradient(1200px 600px at 20% -10%, rgba(96,165,250,.15), transparent 70%),
+      radial-gradient(900px 500px at 90% 10%, rgba(167,139,250,.12), transparent 70%),
+      radial-gradient(600px 400px at 40% 120%, rgba(34,211,238,.10), transparent 70%),
+      #0b0f14;
   }
-  .wrap{max-width:1400px; margin:0 auto; padding:20px 16px 120px; min-height:100vh; display:flex; flex-direction:column;}
-  .main-center{flex:1; display:flex; align-items:center; justify-content:center; padding:48px 0 80px;}
-  header{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px}
-  .groups{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-  .pill{background:var(--chip); border:1px solid rgba(255,255,255,.08); padding:6px 10px; border-radius:999px; font-weight:700; font-size:13px}
-  .score{font-variant-numeric:tabular-nums}
-  .panel{background:linear-gradient(180deg, rgba(255,255,255,.03), transparent); border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:20px; box-shadow:0 10px 28px rgba(0,0,0,.3)}
-  h1{font-size:18px; margin:0 0 2px 0}
-  .sub{color:var(--muted); font-size:13px; margin:0 0 8px 0}
-  .muted{color:var(--muted); font-size:12px}
-
-
-  .turn{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0}
-  .turn .who{font-weight:800; font-size:16px}
-  .turn .card{color:var(--muted)}
-  div#turnPrompt {
-    margin: 2rem;
-}
-
-  .grid{display:grid; gap:10px; margin-top:10px}
-  .cardgrid{grid-template-columns: 1.2fr repeat(4, 1fr); margin: 2rem;}
-  @media (max-width:720px){ .cardgrid{grid-template-columns: 1fr 1fr;} }
-  label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px}
-  input[type=number], input[type=text]{
-    width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12);
-    background:#151b3a; color:var(--text); outline:none;
-  }
-  input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(122,203,255,.18)}
-
-  .sumrow{display:flex; align-items:center; justify-content:space-between; margin: 2rem;}
-  .sumrow .state{font-size:12px}
-  .state.ok{color:var(--good)} .state.warn{color:var(--ok)} .state.bad{color:var(--bad)}
-
-  .actions{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; align-items:center}
-  button{border:none; border-radius:12px; padding:10px 14px; font-weight:800; cursor:pointer}
-  .primary{background:linear-gradient(135deg,#4b7bd8,#7acbff); color:#061127}
-  .primary.big{padding:12px 22px; font-size:16px}
-  .secondary{background:linear-gradient(135deg,#273061,#333a7d); color:#d6dcff}
-  .quiet{background:transparent; border:1px solid rgba(255,255,255,.14); color:#cfd8ff}
-  .ghost{background:transparent; border:1px solid rgba(255,255,255,.08); color:#aeb7d9; font-weight:600; opacity:.85}
-  .ghost:hover{opacity:1}
-
-  .progress{height:10px; border-radius:8px; background:#0f1430; overflow:hidden; margin:10px 0; border:1px solid rgba(255,255,255,.12)}
-  .progress > div{height:100%; background:linear-gradient(90deg,#7acbff,#9bffb5); width:0%; transition: width 900ms cubic-bezier(.2,.8,.2,1)}
-
-  details.settings{margin-top:14px}
-  details.settings summary{cursor:pointer; color:var(--muted)}
-  .setgrid{display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px}
-  .row{display:flex; gap:8px; align-items:center; margin-bottom:6px}
-  select{width:100%; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:#151b3a; color:var(--text)}
-
-  /* Panels */
-  .winner{font-size:18px; font-weight:800; margin-top:6px}
-  .teamCard{background:#0f1636; border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px 12px; margin-bottom:10px}
-  .teamCard h3{margin:0 0 8px 0; font-size:14px}
-  .member{display:flex; justify-content:space-between; gap:8px; font-size:13px; padding:4px 0; border-bottom:1px dashed rgba(255,255,255,.06)}
-  .member:last-child{border-bottom:none}
-
-  /* Overlay feedback */
-  .overlay{position:fixed; inset:0; background:rgba(5,8,16,.74); display:none; align-items:center; justify-content:center; padding:16px; z-index:9999; pointer-events:none;}
-  .modal{max-width:820px; width:100%; background:#121831; border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:16px;
-         transform: scale(.94); opacity:0; transition: transform 240ms cubic-bezier(.2,.8,.2,1), opacity 240ms ease}
-  .overlay.show .modal{ transform: scale(1); opacity:1 }
-  .list{margin:10px 0 0 0; padding:0; list-style:none}
-  .li{display:flex; justify-content:space-between; gap:8px; padding:8px 10px; border-radius:10px; background:#0f1636; border:1px solid rgba(255,255,255,.06); margin-bottom:8px}
-  .delta.good{color:var(--good)} .delta.warn{color:var(--ok)} .delta.bad{color:var(--bad)}
-
-  /* Intake rows */
-  .intakeRow{border:1px dashed rgba(255,255,255,.16); border-radius:12px; padding:10px; margin:10px 0}
-  .intakeHeader{display:flex; align-items:center; justify-content:space-between; gap:10px}
-  .sumtag{font-size:12px; font-weight:800}
-  .sumtag.ok{color:var(--good)} .sumtag.warn{color:var(--ok)} .sumtag.bad{color:var(--bad)}
-
-  span.accent {
-    font-size: 1.5rem;
-    color: var(--ok);
-}
-
-.grayed {
-    font-size: 1rem;
-    color: var(--muted);
-}
-
-#settingsFooter {
-    background-color: black;
-}
+  .app{display:flex;flex-direction:column;min-height:100%}
+  header{position:sticky;top:0;z-index:5;backdrop-filter:saturate(120%) blur(6px);background:linear-gradient(to bottom, rgba(13,18,25,.9), rgba(13,18,25,.6));border-bottom:1px solid var(--border)}
+  .hwrap{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .subtitle{color:var(--muted);font-size:.95rem}
+  .spacer{flex:1}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:linear-gradient(180deg,#0e1622,#0b111a);border:1px solid var(--border);padding:8px 10px;border-radius:999px;display:flex;gap:8px;align-items:center;font-weight:550}
+  .score{min-width:110px;justify-content:center}
+  .progress{width:240px}
+  .progress .bar{position:relative;height:10px;background:#0a1018;border-radius:999px;border:1px solid var(--border);overflow:hidden}
+  .progress .bar>span{position:absolute;inset:0 100% 0 0;background:linear-gradient(90deg, rgba(96,165,250,.45), rgba(34,211,238,.6));transition:inset .8s var(--bezier)}
+  main{flex:1;display:flex}
+  .container{max-width:1100px;margin:18px auto 110px;flex:1;padding:0 16px}
+  .panel{background:linear-gradient(180deg, #0f1620, #0d1219);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+  .grid{display:grid;gap:12px}
+  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  label{display:block;font-weight:600;margin-bottom:6px}
+  input[type="text"], input[type="number"], select{width:100%;padding:10px 12px;border-radius:10px;background:#0b1119;color:var(--text);border:1px solid #1a2433}
+  input:focus, select:focus{outline:none;border-color:#264966;box-shadow:0 0 0 2px rgba(96,165,250,.25)}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .btn{appearance:none;border:1px solid var(--border);background:#0c141e;color:var(--text);border-radius:11px;padding:10px 14px;font-weight:650;cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,#12304a,#0e2436);border-color:#1f3a56}
+  .btn.danger{border-color:#3a1a1a;background:linear-gradient(180deg,#2a0f12,#1a0b0c)}
+  .hint{font-size:.95rem;color:var(--muted)}
+  .sumline{font-weight:650}
+  .sum-ok{color:#22c55e} .sum-under{color:#fbbf24} .sum-over{color:#ef4444}
+  .hidden{display:none !important}
+  .play-card{max-width:720px;margin:12px auto;gap:16px}
+  .huge{font-size:1.6rem}
+  .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#0b1118}
+  .drawer{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:0 16px 16px}
+  .drawer .inner{max-width:1100px;margin:0 auto;background:linear-gradient(180deg,#0f151e,#0b1017);border:1px solid var(--border);border-radius:16px}
+  .drawer .bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border)}
+  .drawer .content{padding:12px;display:none}
+  .drawer.open .content{display:block}
+  .drawer .caret{transform:rotate(0);transition:transform .25s var(--bezier)}
+  .drawer.open .caret{transform:rotate(180deg)}
+  .overlay{position:fixed;inset:0;display:none;place-items:center;z-index:20;background:rgba(2,6,12,.55)}
+  .overlay.show{display:grid}
+  .modal{width:min(680px, calc(100vw - 32px));background:linear-gradient(180deg,#0f1724,#0b111a);border:1px solid var(--border);border-radius:16px;padding:16px}
+  .pb{height:12px;background:#0a1018;border-radius:999px;border:1px solid var(--border);overflow:hidden}
+  .pb>span{display:block;height:100%;width:0%;background:linear-gradient(90deg, rgba(34,211,238,.7), rgba(167,139,250,.7));transition:width .9s cubic-bezier(.2,.7,.2,1)}
+  .team-card{padding:12px;border:1px solid var(--border);border-radius:14px;background:#0b1119}
+  .team-title{font-weight:700;margin-bottom:6px}
 </style>
 </head>
 <body>
-  <div class="wrap" id="app" style="display:none">
-    <header>
+<div class="app" id="app">
+  <header>
+    <div class="hwrap">
       <div>
-        <h1>Minimal Round Entry</h1>
-        <p class="sub">Enter one card at a time. First card sets baseline; scoring starts on the 2nd. Points start at 0; more is better.</p>
+        <div class="title">Team-Building Card Game</div>
+        <div class="subtitle">Enter one card at a time. First card sets baseline; scoring starts at the 2nd. Points start at 0; more is better.</div>
       </div>
-      <div class="groups">
-        <span class="pill"><span id="g1n">Group 1</span>: <span class="score" id="g1s">0</span></span>
-        <span class="pill"><span id="g2n">Group 2</span>: <span class="score" id="g2s">0</span></span>
-        <span class="pill" id="progressPill" style="display:none">Progress: <span id="progTxt">0%</span></span>
-      </div>
-    </header>
-
-    <!-- PLAY PANEL -->
-    
-    <div id="mainCenter" class="main-center">
-<section class="panel" id="playPanel" style="margin-top:40px">
-      <div id="progressWrap" class="progress" style="display:none"><div id="progBar"></div></div>
-
-      <div class="turn">
-        <div class="who" id="turnWho">Team 1</div>
-        <div class="card" id="turnCard">Card 1 / 4</div>
-      </div>
-      <div id="turnPrompt" class="turn-prompt"></div>
-
-      <div class="grid cardgrid" id="inputs"></div>
-
-      <div class="sumrow">
-        <div class="state" id="sumState">Sum: 0 / 20</div>
-        <div class="state" id="sumHint">Enter a name and four values</div>
-      </div>
-
-      <div class="actions">
-        <button class="ghost" id="prevTeam">Prev team</button>
-        <button class="ghost" id="nextTeam">Next team</button>
-        <button class="ghost" id="prevCard">Back</button>
-        <button class="primary big" id="lockCard" disabled>Lock card</button>
-        <button class="ghost" id="resetData" style="margin-left:auto">Reset data</button>
-      </div>
-
-      
-    </section>
-    </div>
-
-    <div id="settingsFooter" class="panel" style="position:fixed; left:50%; transform:translateX(-50%); bottom:16px; width:calc(100% - 32px); max-width:940px; z-index:999; box-shadow:0 20px 40px rgba(0,0,0,.35);"><details class="settings">
-        <summary>Settings (setup, groups & stage assignment)</summary>
-        <div class="setgrid">
-          <div>
-            <label>Group 1 name</label>
-            <input type="text" id="g1input" />
+      <div class="spacer"></div>
+      <div class="chips">
+        <div class="chip score" id="score1">Group 1: 0</div>
+        <div class="chip score" id="score2">Group 2: 0</div>
+        <div class="chip progress">
+          <div class="row" style="gap:8px;align-items:center">
+            <small id="progressLabel">0 / ?</small>
           </div>
+          <div class="bar" aria-hidden="true"><span id="progressBar"></span></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+
+      <section id="setupSec" class="panel">
+        <h2 style="margin:6px 0 10px">Setup</h2>
+        <div class="grid cols-2">
           <div>
-            <label>Group 2 name</label>
-            <input type="text" id="g2input" />
+            <label>Skills (4)</label>
+            <div class="grid cols-2">
+              <input type="text" id="skill0" placeholder="Visual" />
+              <input type="text" id="skill1" placeholder="Sound" />
+              <input type="text" id="skill2" placeholder="Programming" />
+              <input type="text" id="skill3" placeholder="Project Management" />
+            </div>
           </div>
           <div>
             <label>Participants (optional)</label>
-            <input type="number" id="participantsInput" min="0" step="1" />
-            <div class="muted">If set, progress bar shows cards locked vs participants & fairness end checks become active.</div>
-          </div>
-          <div>
-            <label>Skills</label>
-            <div class="grid" id="skillsEditor" style="grid-template-columns:1fr 1fr"></div>
+            <input type="number" id="participants" min="0" step="1" placeholder="e.g., 20" />
+            <div class="hint">Used for progress + fairness guard</div>
           </div>
         </div>
-        <div style="margin-top:10px">
-          <div class="row" style="font-size:12px; color:var(--muted); margin-bottom:8px">
-            Stage assignment — which group gets points for each team & stage
-          </div>
-          <div id="assignRows"></div>
-        </div>
-        <div style="margin-top:12px">
-          <label class="muted" style="display:block;margin-bottom:6px">Handle odd remainder (after scoring):</label>
-          <div class="row">
-            <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="remainderMode" id="remDistribute" checked> <span>Distribute across existing teams (allow 5th member)</span></label>
-          </div>
-          <div class="row">
-            <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="remainderMode" id="remOwnTeam"> <span>Keep a smaller extra team</span></label>
-          </div>
-        </div>
-        <div class="actions" style="margin-top:10px">
-          <button class="quiet" id="resetRound">Reset round</button>
-          <button class="quiet" id="restartSetup">Restart setup</button>
-        </div>
-      </details></div>
 
+        <details style="margin-top:12px">
+          <summary class="hint">Optional settings</summary>
+          <div class="grid cols-2" style="margin-top:10px">
+            <div>
+              <label>Group 1 name</label>
+              <input type="text" id="gname0" placeholder="Group 1" />
+            </div>
+            <div>
+              <label>Group 2 name</label>
+              <input type="text" id="gname1" placeholder="Group 2" />
+            </div>
+            <div>
+              <label>Remainder placement mode</label>
+              <div class="row">
+                <label class="tag"><input type="radio" name="remainderMode" value="distribute" checked />&nbsp;Distribute to 5th members</label>
+                <label class="tag"><input type="radio" name="remainderMode" value="ownTeam" />&nbsp;Own smaller team</label>
+              </div>
+            </div>
+          </div>
+        </details>
 
-    <!-- SCORE PANEL -->
-    <section class="panel" id="scorePanel" style="display:none">
-      <h2 style="margin:0 0 6px 0; font-size:18px">Scoring finished</h2>
-      <p class="sub" id="endReason"></p>
-      <div class="winner" id="winnerText"></div>
-      <div class="actions" style="margin-top:10px">
-        <button class="primary" id="gotoIntake" type="button">Add remaining cards</button>
-        <button class="quiet" id="skipToTeams" type="button">Skip & view teams</button>
+        <div class="row" style="margin-top:14px;justify-content:flex-end">
+          <button class="btn primary" id="startBtn">Start</button>
+        </div>
+        <div class="hint">Setup is saved in your browser (localStorage).</div>
+      </section>
+
+      <section id="playSec" class="panel hidden">
+        <div class="play-card grid">
+          <div class="row" style="justify-content:space-between">
+            <div>Now creating <strong id="turnInfoTeam">Team 1</strong></div>
+            <div class="hint" id="turnInfoCard">Card 1 / 4</div>
+          </div>
+          <div class="huge" id="pickerPrompt">Group X — pick a card</div>
+          <div class="hint" id="noScoreNote">(no points this card)</div>
+
+          <div class="grid cols-2" id="entryGrid">
+            <div>
+              <label for="studentName">Card name (student)</label>
+              <input type="text" id="studentName" placeholder="Name" />
+            </div>
+            <div class="grid cols-2" id="skillInputs"></div>
+          </div>
+
+          <div class="sumline" id="sumLine">Sum: 0 / 20</div>
+
+          <div class="row" style="justify-content:space-between">
+            <div class="row">
+              <button class="btn" id="prevTeam">Prev team</button>
+              <button class="btn" id="nextTeam">Next team</button>
+              <button class="btn" id="backCard">Back</button>
+            </div>
+            <div class="row">
+              <button class="btn danger" id="resetBtn">Reset data</button>
+              <button class="btn primary" id="lockBtn" disabled>Lock card</button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="endSec" class="panel hidden">
+        <h2 style="margin:6px 0 6px">Scoring finished</h2>
+        <div class="hint" id="endReason"></div>
+        <div class="row" style="margin-top:10px;gap:14px;flex-wrap:wrap">
+          <div class="chip" id="finalScore1">Group 1: 0</div>
+          <div class="chip" id="finalScore2">Group 2: 0</div>
+          <div class="chip" id="winnerChip">Winner: —</div>
+        </div>
+        <div class="row" style="margin-top:12px;justify-content:flex-end;gap:10px">
+          <button class="btn" id="toIntake">Add remaining cards</button>
+          <button class="btn primary" id="toFinal">Skip &amp; view teams</button>
+        </div>
+      </section>
+
+      <section id="intakeSec" class="panel hidden">
+        <h2 style="margin:6px 0 10px">Add remaining cards</h2>
+        <div class="hint" id="intakeHint">Enter cards below. Only rows that sum to 20 are included.</div>
+        <div id="intakeRows" class="grid" style="margin-top:10px;gap:10px"></div>
+        <div class="row" style="margin-top:12px;justify-content:space-between">
+          <button class="btn" id="addRow">Add another card</button>
+          <button class="btn primary" id="assignAuto">Assign &amp; continue</button>
+        </div>
+      </section>
+
+      <section id="finalSec" class="panel hidden">
+        <h2 style="margin:6px 0 10px">Final Teams</h2>
+        <div class="final-list" id="finalList"></div>
+        <div class="row" style="margin-top:12px;justify-content:flex-end;gap:10px">
+          <button class="btn" id="exportCSV">Export CSV</button>
+          <button class="btn" id="exportJSON">Export JSON</button>
+          <button class="btn danger" id="restart">Restart program</button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <div class="drawer" id="drawer">
+    <div class="inner">
+      <div class="bar">
+        <button class="btn" id="toggleDrawer" aria-expanded="false"><span class="caret">▴</span>&nbsp;Settings</button>
+        <div class="hint">Runtime editing for names, participants, skills, remainder, and per-team stage owners</div>
       </div>
-    </section>
-
-    <!-- INTAKE PANEL -->
-    <section class="panel" id="intakePanel" style="display:none">
-      <h2 style="margin:0 0 6px 0; font-size:18px">Add remaining cards</h2>
-      <p class="sub" id="intakeSub"></p>
-      <div id="intakeList"></div>
-      <div class="actions">
-        <button class="secondary" id="addRow" type="button">Add another card</button>
-        <button class="primary" id="assignIntake" type="button">Assign & continue</button>
-      </div>
-    </section>
-
-    <!-- END PANEL -->
-    <section class="panel" id="endPanel" style="display:none">
-      <h2 style="margin:0 0 6px 0; font-size:18px">Final Teams</h2>
-      <div id="teamsList"></div>
-      <div class="actions">
-        <button class="primary" id="exportCSV" type="button">Export CSV</button>
-        <button class="primary" id="exportJSON" type="button">Export JSON</button>
-        <button class="quiet" id="restartAll" type="button">Restart program</button>
-      </div>
-    </section>
-  </div>
-
-  <!-- SETUP SCREEN -->
-  <div class="wrap setup" id="setup">
-    <div class="panel">
-      <h2>Game Setup</h2>
-      <p class="sub">Enter the four skill names and (optionally) the number of participants (cards this session).</p>
-      <div class="grid" style="grid-template-columns:1fr 1fr 1fr 1fr">
-        <div><label>Skill 1</label><input type="text" id="s0" placeholder="Visual" /></div>
-        <div><label>Skill 2</label><input type="text" id="s1" placeholder="Sound" /></div>
-        <div><label>Skill 3</label><input type="text" id="s2" placeholder="Programming" /></div>
-        <div><label>Skill 4</label><input type="text" id="s3" placeholder="Project Management" /></div>
-      </div>
-      <div style="margin-top:10px; max-width:420px">
-        <label>Participants (optional)</label>
-        <input type="number" id="setupParticipants" min="0" step="1" placeholder="e.g., 24" />
-        <div class="muted">Used for progress and fairness end-of-game detection.</div>
-      </div>
-
-      <details class="settings" style="margin-top:12px">
-        <summary>Optional settings</summary>
-        <div class="setgrid">
-          <div>
-            <label>Group 1 name</label>
-            <input type="text" id="setupG1" placeholder="Group 1" />
+      <div class="content">
+        <div class="grid cols-2">
+          <div class="panel">
+            <div class="grid cols-2">
+              <div><label>Group 1 name</label><input type="text" id="dgname0" /></div>
+              <div><label>Group 2 name</label><input type="text" id="dgname1" /></div>
+              <div><label>Participants</label><input type="number" id="dparticipants" min="0" step="1" /></div>
+              <div>
+                <label>Remainder mode</label>
+                <select id="dremainder">
+                  <option value="distribute">Distribute (5th members)</option>
+                  <option value="ownTeam">Own smaller team</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <label>Skills</label>
+              <div class="grid cols-4">
+                <input type="text" id="dskill0" />
+                <input type="text" id="dskill1" />
+                <input type="text" id="dskill2" />
+                <input type="text" id="dskill3" />
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px;justify-content:flex-end">
+              <button class="btn primary" id="drawerSave">Save settings</button>
+            </div>
           </div>
-          <div>
-            <label>Group 2 name</label>
-            <input type="text" id="setupG2" placeholder="Group 2" />
+
+          <div class="panel">
+            <label>Per-team stage ownership (optional)</label>
+            <div id="ownerEditor" class="grid" style="gap:8px"></div>
+            <div class="hint">Pair/Triplet/Quartet points go to the selected group per team.</div>
           </div>
         </div>
-        <div style="margin-top:10px">
-          <label class="muted" style="display:block;margin-bottom:6px">Handle odd remainder (after scoring):</label>
-          <div class="row">
-            <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="setupRemainderMode" id="setupRemDistribute" checked> <span>Distribute across existing teams (allow 5th member)</span></label>
-          </div>
-          <div class="row">
-            <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="setupRemainderMode" id="setupRemOwnTeam"> <span>Keep a smaller extra team</span></label>
-          </div>
-          <div class="muted" style="margin-top:6px">Per-team stage assignment can still be adjusted later in the in-game Settings.</div>
-        </div>
-      </details>
-
-      <div class="actions" style="margin-top:12px">
-        <button class="primary" id="startGame" type="button">Start</button>
       </div>
     </div>
   </div>
 
-  <!-- Feedback overlay -->
-  <div class="overlay" id="fbOverlay">
+  <div class="overlay" id="overlay">
     <div class="modal">
-      <div id="fbHeader" style="font-weight:800; font-size:16px">Stage feedback</div>
-      <div id="fbSub" class="sub" style="margin-top:4px"></div>
-      <div class="progress" style="margin-top:10px"><div id="fbProgress"></div></div>
-      <ul class="list" id="fbList"></ul>
-      <div class="actions" style="margin-top:10px; justify-content:flex-end">
-        <button class="primary" id="fbContinue" type="button">Continue</button>
+      <div id="overlayTitle" class="big">Stage result</div>
+      <div class="hint" id="overlayOwner">Points → Group</div>
+      <div class="pb" style="margin:10px 0 6px"><span id="overlayPB"></span></div>
+      <div class="row" id="overlayStats"></div>
+      <ul class="stage-list" id="overlayList" style="margin:8px 0 0;padding-left:18px"></ul>
+      <div class="row" style="margin-top:12px;justify-content:flex-end;gap:10px">
+        <button class="btn" id="overlayUndo">Undo last lock</button>
+        <button class="btn primary" id="overlayClose">Continue</button>
       </div>
     </div>
   </div>
+
+</div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function(){
 (function(){
-  const STORAGE_KEY = 'tb_scoring_complete_v1';
-  const TEAMS_COUNT = 4;
-  const STAGES = [
-    {name:"Pair", target:10, max:40, needCard:1},
-    {name:"Triplet", target:15, max:60, needCard:2},
-    {name:"Quartet", target:20, max:80, needCard:3}
-  ];
+  "use strict";
+  const LSKEY = "tbcg_state_v1";
 
-  // Elements
-  const app = document.getElementById('app');
-  const setup = document.getElementById('setup');
-
-  const g1n = document.getElementById('g1n');
-  const g2n = document.getElementById('g2n');
-  const g1s = document.getElementById('g1s');
-  const g2s = document.getElementById('g2s');
-  const progressWrap = document.getElementById('progressWrap');
-  const progressPill = document.getElementById('progressPill');
-  const progBar = document.getElementById('progBar');
-  const progTxt = document.getElementById('progTxt');
-
-  const playPanel = document.getElementById('playPanel');
-  const settingsFooter = document.getElementById('settingsFooter');
-  const scorePanel = document.getElementById('scorePanel');
-  const intakePanel = document.getElementById('intakePanel');
-  const endPanel = document.getElementById('endPanel');
-
-  const turnWho = document.getElementById('turnWho');
-  const turnCard = document.getElementById('turnCard');
-  const turnPrompt = document.getElementById('turnPrompt');
-  const inputs = document.getElementById('inputs');
-  const sumState = document.getElementById('sumState');
-  const sumHint = document.getElementById('sumHint');
-  const prevCardBtn = document.getElementById('prevCard');
-  const lockBtn = document.getElementById('lockCard');
-  const prevTeamBtn = document.getElementById('prevTeam');
-  const nextTeamBtn = document.getElementById('nextTeam');
-  const resetData = document.getElementById('resetData');
-  const remDistribute = document.getElementById('remDistribute');
-  const remOwnTeam = document.getElementById('remOwnTeam');
-
-  const g1input = document.getElementById('g1input');
-  const g2input = document.getElementById('g2input');
-  const participantsInput = document.getElementById('participantsInput');
-  const skillsEditor = document.getElementById('skillsEditor');
-
-  const assignRows = document.getElementById('assignRows');
-  const resetRoundBtn = document.getElementById('resetRound');
-  const restartSetupBtn = document.getElementById('restartSetup');
-
-  const endReason = document.getElementById('endReason');
-  const winnerText = document.getElementById('winnerText');
-  const gotoIntake = document.getElementById('gotoIntake');
-  const skipToTeams = document.getElementById('skipToTeams');
-
-  const intakeSub = document.getElementById('intakeSub');
-  const intakeList = document.getElementById('intakeList');
-  const addRowBtn = document.getElementById('addRow');
-  const assignIntakeBtn = document.getElementById('assignIntake');
-
-  const teamsList = document.getElementById('teamsList');
-  const exportCSV = document.getElementById('exportCSV');
-  const exportJSON = document.getElementById('exportJSON');
-
-  const fbOverlay = document.getElementById('fbOverlay');
-  const fbHeader = document.getElementById('fbHeader');
-  const fbSub = document.getElementById('fbSub');
-  const fbList = document.getElementById('fbList');
-  const fbProgress = document.getElementById('fbProgress');
-  const fbContinue = document.getElementById('fbContinue');
-
-  const s0 = document.getElementById('s0');
-  const s1 = document.getElementById('s1');
-  const s2 = document.getElementById('s2');
-  const s3 = document.getElementById('s3');
-  const setupParticipants = document.getElementById('setupParticipants');
-  const setupG1 = document.getElementById('setupG1');
-  const setupG2 = document.getElementById('setupG2');
-  const setupRemDistribute = document.getElementById('setupRemDistribute');
-  const setupRemOwnTeam = document.getElementById('setupRemOwnTeam');
-  const startGame = document.getElementById('startGame');
-
-  // Helpers
-  const toNum = (v)=>{ const n=parseInt(v,10); return Number.isFinite(n)?n:0; };
-  const clamp = (v,min,max)=> Math.max(min, Math.min(max, v));
-  const show = (el, vis)=> { if(!el) return; el.style.display = vis?'block':'none'; };
-
-  // State
-  const state = migrate(loadState()) || defaultState();
-
-  // Setup defaults
-  [s0.value, s1.value, s2.value, s3.value] = state.skills;
-  if(state.participants>0) setupParticipants.value = state.participants;
-  // Prefill optional settings on setup page
-  if (setupG1) setupG1.value = state.groupNames[0] || 'Group 1';
-  if (setupG2) setupG2.value = state.groupNames[1] || 'Group 2';
-  if (setupRemDistribute && setupRemOwnTeam) {
-    if (state.remainderMode === 'ownTeam') { setupRemOwnTeam.checked = true; setupRemDistribute.checked = false; }
-    else { setupRemDistribute.checked = true; setupRemOwnTeam.checked = false; }
+  function defaultTeam(i){
+    const pairToGroup = (i % 2 === 0) ? 1 : 0;
+    const tripToGroup = 1 - pairToGroup;
+    const quadToGroup = pairToGroup;
+    return {cards:[[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],names:["","","",""],locked:[false,false,false,false],extras:[],pairToGroup,tripToGroup,quadToGroup};
   }
-
-
-  startGame.addEventListener('click', ()=>{
-    // Optional settings from setup
-    if (setupG1) state.groupNames[0] = (setupG1.value || 'Group 1');
-    if (setupG2) state.groupNames[1] = (setupG2.value || 'Group 2');
-    if (setupRemDistribute && setupRemOwnTeam) state.remainderMode = setupRemOwnTeam.checked ? 'ownTeam' : 'distribute';
-    state.skills = [
-      (s0.value||"Visual").trim() || "Visual",
-      (s1.value||"Sound").trim() || "Sound",
-      (s2.value||"Programming").trim() || "Programming",
-      (s3.value||"Project Management").trim() || "Project Management",
-    ];
-    const p = parseInt(setupParticipants.value,10);
-    state.participants = Number.isFinite(p) && p>=0 ? p : 0;
-    state.setupDone = true; g1n.textContent = state.groupNames[0]; g2n.textContent = state.groupNames[1];
-    saveState();
-    mountApp();
-  });
-
-  restartSetupBtn.addEventListener('click', ()=>{
-    if(!confirm('Return to setup? Data stays saved, and you can resume.')) return;
-    state.setupDone = false; saveAndRender();
-  });
-
-  function mountApp(){ setup.style.display='none'; app.style.display='block'; initAppUI(); render(); }
-  function mountSetup(){ app.style.display='none'; setup.style.display='block'; }
-
-  if(state.setupDone) mountApp(); else mountSetup();
-
-  function initAppUI(){
-    g1n.textContent = state.groupNames[0];
-    g2n.textContent = state.groupNames[1];
-    g1input.value = state.groupNames[0];
-    g2input.value = state.groupNames[1];
-
-    g1input.addEventListener('input', ()=>{ state.groupNames[0] = g1input.value || "Group 1"; g1n.textContent = state.groupNames[0]; saveAndRender(); });
-    g2input.addEventListener('input', ()=>{ state.groupNames[1] = g2input.value || "Group 2"; g2n.textContent = state.groupNames[1]; saveAndRender(); });
-
-    participantsInput.value = state.participants || '';
-    participantsInput.addEventListener('input', ()=>{
-      const p = parseInt(participantsInput.value,10);
-      state.participants = Number.isFinite(p) && p>=0 ? p : 0; saveAndRender();
-    });
-
-    // Skills editor
-    skillsEditor.innerHTML='';
-    state.skills.forEach((name, idx)=>{
-      const d = document.createElement('div');
-      const inp = document.createElement('input'); inp.type='text'; inp.value=name;
-      inp.addEventListener('input', ()=>{ state.skills[idx] = inp.value || `Skill ${idx+1}`; saveAndRender(); });
-      d.appendChild(inp); skillsEditor.appendChild(d);
-    });
-
-    buildAssignRows();
-
-    prevTeamBtn.addEventListener('click', ()=> changeTeam(-1));
-    nextTeamBtn.addEventListener('click', ()=> changeTeam(1));
-    prevCardBtn.addEventListener('click', ()=> changeCard(-1));
-    lockBtn.addEventListener('click', function(e){ console.debug('Lock clicked'); onLockCard(e); });
-    resetRoundBtn.addEventListener('click', ()=>{
-      if(!confirm('Reset the whole round? All inputs & locks will be cleared.')) return;
-      const fresh = defaultState();
-      fresh.setupDone = state.setupDone;
-      fresh.groupNames = state.groupNames.slice();
-      fresh.skills = state.skills.slice();
-      fresh.participants = state.participants;
-      Object.assign(state, fresh);
-      saveAndRender();
-    });
-    resetData.addEventListener('click', ()=>{
-      if(!confirm('Reset all saved data?')) return;
-      localStorage.removeItem(STORAGE_KEY); location.reload();
-    });
-
-    gotoIntake.addEventListener('click', ()=>{ show(scorePanel,false); show(intakePanel,true); renderIntake(); });
-    skipToTeams.addEventListener('click', ()=>{ show(scorePanel,false); show(endPanel,true); renderEnd(); });
-    addRowBtn.addEventListener('click', ()=> addIntakeRow());
-    assignIntakeBtn.addEventListener('click', ()=> assignIntakeAndContinue());
-    exportCSV.addEventListener('click', ()=> downloadText(makeCSV(), 'teams.csv', 'text/csv'));
-    exportJSON.addEventListener('click', ()=> downloadText(JSON.stringify(exportData(), null, 2), 'teams.json', 'application/json'));
-
-    const restartAllBtn = document.getElementById('restartAll');
-    if(restartAllBtn){
-      restartAllBtn.addEventListener('click', ()=>{
-        if(confirm('Restart the entire program? All progress and saved data will be cleared.')){
-          localStorage.removeItem(STORAGE_KEY);
-          location.reload();
-        }
-      });
-    }
-
-
-    fbContinue.addEventListener('click', ()=>{ fbOverlay.classList.remove('show'); fbOverlay.style.display='none'; fbOverlay.style.pointerEvents='none'; render(); });
-  }
-
-  function buildAssignRows(){
-    assignRows.innerHTML = '';
-    state.teams.forEach((t,i)=>{
-      const row = document.createElement('div'); row.className='row';
-      const label = document.createElement('div'); label.style.minWidth='64px'; label.textContent = `Team ${i+1}`;
-      const sel1 = makeSel([state.groupNames[0], state.groupNames[1]], t.pairToGroup);
-      const sel2 = makeSel([state.groupNames[0], state.groupNames[1]], t.tripToGroup);
-      const sel3 = makeSel([state.groupNames[0], state.groupNames[1]], t.quadToGroup);
-      sel1.addEventListener('change', e=>{ t.pairToGroup = parseInt(e.target.value,10); saveAndRender(); });
-      sel2.addEventListener('change', e=>{ t.tripToGroup = parseInt(e.target.value,10); saveAndRender(); });
-      sel3.addEventListener('change', e=>{ t.quadToGroup = parseInt(e.target.value,10); saveAndRender(); });
-      row.appendChild(label);
-      row.appendChild(wrapSel("Pair →", sel1));
-      row.appendChild(wrapSel("Triplet →", sel2));
-      row.appendChild(wrapSel("Quartet →", sel3));
-      assignRows.appendChild(row);
-    });
-  }
-  function makeSel(options, selectedIndex){
-    const sel = document.createElement('select');
-    options.forEach((opt, idx)=>{
-      const o = document.createElement('option'); o.value = idx; o.textContent = opt; if(idx===selectedIndex) o.selected=true; sel.appendChild(o);
-    });
-    return sel;
-  }
-  function wrapSel(lbl, sel){
-    const d = document.createElement('div'); d.style.display='flex'; d.style.alignItems='center'; d.style.gap='6px';
-    const s = document.createElement('span'); s.style.fontSize='12px'; s.style.color='var(--muted)'; s.textContent = lbl;
-    d.appendChild(s); d.appendChild(sel); return d;
-  }
-
   function defaultState(){
-    const teams = [];
-    for(let i=0;i<TEAMS_COUNT;i++){
-      const pairTo = (i % 2 === 0) ? 1 : 0;
-      const tripTo = 1 - pairTo;
-      const quadTo = pairTo;
-      teams.push({
-        cards: [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
-        names: ["","","",""],
-        locked: [false,false,false,false],
-        pairToGroup: pairTo,
-        tripToGroup: tripTo,
-        quadToGroup: quadTo,
-      });
-    }
     return {
-      setupDone: false,
-      skills: ["Visual","Sound","Programming","Project Management"],
-      participants: 0,
-      groupNames: ["Group 1","Group 2"],
-      currentTeam: 0,
-      currentCard: 0,
-      scoringEnded: false,
-      endWhy: "",
-      teams
+      setupDone:false,
+      skills:["Visual","Sound","Programming","Project Management"],
+      participants:0,
+      groupNames:["Group 1","Group 2"],
+      remainderMode:"distribute",
+      currentTeam:0,
+      currentCard:0,
+      scoringEnded:false,
+      endWhy:"",
+      totals:[0,0],
+      teams:[defaultTeam(0),defaultTeam(1),defaultTeam(2),defaultTeam(3)],
+      lastLock:null
     };
   }
+  let S = load();
+  function load(){
+    try{ const raw = localStorage.getItem(LSKEY); if(raw){ return JSON.parse(raw); } }catch(e){}
+    return defaultState();
+  }
+  function save(){ localStorage.setItem(LSKEY, JSON.stringify(S)); }
+  function resetAll(){ localStorage.removeItem(LSKEY); S=defaultState(); render(); }
 
-  function migrate(st){
-    if(!st) return null;
-    st.teams?.forEach((t,i)=>{
-      if(!Array.isArray(t.cards) || t.cards.length<4){
-        const missing = 4 - (t.cards?.length || 0);
-        t.cards = (t.cards || []);
-        for(let k=0;k<missing;k++) t.cards.push([0,0,0,0]);
+  const $ = s=>document.querySelector(s);
+  const $$ = s=>Array.from(document.querySelectorAll(s));
+  function clamp(v,min,max){ return Math.max(min, Math.min(max,v)); }
+  function sum(a){ return a.reduce((x,y)=>x+y,0); }
+
+  function cardEntered(ti,ci){
+    const t=S.teams[ti]; const vals=t.cards[ci]||[0,0,0,0]; const name=(t.names[ci]||"").trim();
+    if(t.locked[ci]) return true; if(name) return true; return vals.some(v=>v>0);
+  }
+  function totalEnteredCards(){ let c=0; for(let ti=0;ti<S.teams.length;ti++){ for(let ci=0;ci<4;ci++){ if(cardEntered(ti,ci)) c++; } } return c; }
+  function presentCountForTeam(ti){ let k=0; for(let ci=0;ci<4;ci++){ if(cardEntered(ti,ci)) k++; } return k; }
+
+  // STRICT FAIRNESS: require enough remaining cards so all teams can reach the same next scoring stage
+  function fairnessCheckMaybe(){
+    if(!S.participants || S.participants<=0) return;
+    const entered = totalEnteredCards();
+    const remaining = Math.max(0, S.participants - entered);
+
+    // Count present cards for a team (entered = locked OR any value OR a name)
+    function presentCountTeam(ti){
+      let k=0; for(let ci=0;ci<4;ci++){ if(cardEntered(ti,ci)) k++; } return k;
+    }
+    const ti = S.currentTeam;
+    const k = presentCountTeam(ti);
+
+    // Never stop in the middle of a team: allow finishing to 4
+    if(k>0 && k<4) return;
+
+    // Only evaluate before starting a fresh team (k == 0)
+    if(k===0){
+      // Completed full teams so far
+      let completed = 0;
+      for(let j=0;j<4;j++){ if(presentCountTeam(j) >= 4) completed++; }
+
+      // Remaining teams we could still complete (including this one)
+      const teamsRemaining = 4 - completed;
+      const maxCompletableTeams = Math.min(teamsRemaining, Math.floor(remaining / 4));
+
+      const totalIfProceed = completed + maxCompletableTeams;
+
+      // To keep groups' scoring rounds equal (pair+quad vs trip mapping), require an EVEN number of full teams.
+      if(totalIfProceed % 2 === 1){
+        S.scoringEnded = true;
+        S.endWhy = `Fairness: only ${remaining} cards left. Completing more teams would result in an odd number of full teams (${totalIfProceed}), giving one group an extra scoring round. Stopping now keeps scoring rounds equal.`;
+        save(); showSection("end"); return;
       }
-      if(!Array.isArray(t.names) || t.names.length<4){
-        const missing = 4 - (t.names?.length || 0);
-        t.names = (t.names || []);
-        for(let k=0;k<missing;k++) t.names.push("");
-      }
-      if(!Array.isArray(t.locked) || t.locked.length<4){
-        const missing = 4 - (t.locked?.length || 0);
-        t.locked = (t.locked || []);
-        for(let k=0;k<missing;k++) t.locked.push(false);
-      }
-      if(typeof t.quadToGroup !== 'number'){
-        const pairTo = (typeof t.pairToGroup==='number')?t.pairToGroup:((i%2===0)?1:0);
-        t.quadToGroup = pairTo;
-      }
+    }
+  }
+function ownerForStage(team, stage){
+    if(stage==="pair") return team.pairToGroup;
+    if(stage==="triplet") return team.tripToGroup;
+    if(stage==="quartet") return team.quadToGroup;
+    return 0;
+  }
+  function stageTargetForCardIndex(idx){
+    if(idx===1) return {stage:"pair", target:10, max:40};
+    if(idx===2) return {stage:"triplet", target:15, max:60};
+    if(idx===3) return {stage:"quartet", target:20, max:80};
+    return {stage:"baseline", target:0, max:0};
+    }
+  function teamSumUpTo(team, upTo){ const sums=[0,0,0,0]; for(let i=0;i<=upTo;i++){ const v=team.cards[i]||[0,0,0,0]; for(let k=0;k<4;k++) sums[k]+=v[k]; } return sums; }
+  function stagePointsFromSums(sums, target){ let pts=0; const perSkill=[]; for(let i=0;i<4;i++){ const d=Math.abs(target - sums[i]); const p=target - d; perSkill.push({delta:sums[i]-target, points:p}); pts+=p; } return {pts, perSkill}; }
+  function pickerIndexFor(ti, ci){ const team=S.teams[ti]; const starterIndex = 1 - team.pairToGroup; return (ci % 2 === 0) ? starterIndex : (1 - starterIndex); }
+  function allTeamsComplete(){ return S.teams.slice(0,4).every(t => t.locked.filter(Boolean).length===4); }
+
+  function renderHeader(){
+    $("#score1").textContent = `${S.groupNames[0]}: ${S.totals[0]}`;
+    $("#score2").textContent = `${S.groupNames[1]}: ${S.totals[1]}`;
+    const entered = totalEnteredCards();
+    if(S.participants && S.participants>0){
+      const pct = clamp(entered / S.participants, 0, 1);
+      $("#progressLabel").textContent = `${entered} / ${S.participants} (${Math.round(pct*100)}%)`;
+      $("#progressBar").style.insetInlineEnd = `${(1 - pct)*100}%`;
+    }else{
+      $("#progressLabel").textContent = `${entered} cards entered`;
+      const pct = clamp((entered%20)/20, 0, 1);
+      $("#progressBar").style.insetInlineEnd = `${(1 - pct)*100}%`;
+    }
+  }
+  function skillNames(){ return S.skills && S.skills.length===4 ? S.skills : ["Skill 1","Skill 2","Skill 3","Skill 4"]; }
+
+  function rebuildSkillInputs(ti, ci){
+    const grid=$("#skillInputs"); grid.innerHTML="";
+    const t=S.teams[ti]; const vals=t.cards[ci]||[0,0,0,0];
+    for(let i=0;i<4;i++){
+      const wrap=document.createElement("div"); const lab=document.createElement("label"); lab.textContent=skillNames()[i]; lab.setAttribute("for", `skill_${i}`);
+      const inp=document.createElement("input"); inp.type="number"; inp.min="0"; inp.max="20"; inp.step="1"; inp.id=`skill_${i}`; inp.value=vals[i];
+      inp.addEventListener("input", ()=>{ const v=parseInt(inp.value||"0",10); t.cards[ci][i]=isNaN(v)?0:clamp(v,0,20); updateSumLine(ti,ci); save(); });
+      if(t.locked[ci]) inp.disabled=true;
+      wrap.appendChild(lab); wrap.appendChild(inp); grid.appendChild(wrap);
+    }
+  }
+  function updateSumLine(ti,ci){
+    const t=S.teams[ti]; const s=sum(t.cards[ci]);
+    const line=$("#sumLine"); let txt="", cls="";
+    if(s===20){ cls="sum-ok"; txt="Looks good – ready to lock"; }
+    else if(s<20){ cls="sum-under"; txt=`Under by ${20-s}`; }
+    else { cls="sum-over"; txt=`Over by ${s-20}`; }
+    line.className=`sumline ${cls}`; line.textContent=`Sum: ${s} / 20 — ${txt}`;
+    $("#lockBtn").disabled = !(s===20 && !t.locked[ci]);
+  }
+  function renderPlay(){
+    const ti=S.currentTeam, ci=S.currentCard, t=S.teams[ti];
+    $("#turnInfoTeam").textContent=`Team ${ti+1}`;
+    $("#turnInfoCard").textContent=`Card ${ci+1} / 4`;
+    const pickerIdx = pickerIndexFor(ti, ci);
+    $("#pickerPrompt").innerHTML = `<span style="color:#22d3ee">${S.groupNames[pickerIdx]}</span> — pick a card`;
+    $("#noScoreNote").classList.toggle("hidden", !(ci===0));
+    const nameEl=$("#studentName"); nameEl.value=t.names[ci]||""; nameEl.disabled=!!t.locked[ci];
+    nameEl.oninput=(e)=>{ t.names[ci]=(e.target.value||"").slice(0,120); updateSumLine(ti,ci); save(); };
+    rebuildSkillInputs(ti,ci); updateSumLine(ti,ci);
+    $("#backCard").disabled=(ci===0);
+  }
+  function renderEnd(){
+    $("#endReason").textContent=S.endWhy || "All teams completed.";
+    $("#finalScore1").textContent=`${S.groupNames[0]}: ${S.totals[0]}`;
+    $("#finalScore2").textContent=`${S.groupNames[1]}: ${S.totals[1]}`;
+    const w = S.totals[0]===S.totals[1] ? "Tie" : (S.totals[0]>S.totals[1]?S.groupNames[0]:S.groupNames[1]);
+    $("#winnerChip").textContent=`Winner: ${w}`;
+  }
+  function renderOwnerEditor(){
+    const root=$("#ownerEditor"); root.innerHTML="";
+    S.teams.forEach((t,i)=>{
+      const row=document.createElement("div"); row.className="row"; row.innerHTML=`<div class="tag"><strong>Team ${i+1}</strong></div>`;
+      const mk=(label,key)=>{ const wrap=document.createElement("label"); wrap.className="tag"; const sel=document.createElement("select");
+        sel.innerHTML=`<option value="0">${S.groupNames[0]}</option><option value="1">${S.groupNames[1]}</option>`; sel.value=String(t[key]);
+        sel.onchange=()=>{ t[key]=parseInt(sel.value,10); save(); render(); }; wrap.append(`${label}: `); wrap.appendChild(sel); return wrap; };
+      row.appendChild(mk("Pair→","pairToGroup")); row.appendChild(mk("Triplet→","tripToGroup")); row.appendChild(mk("Quartet→","quadToGroup"));
+      root.appendChild(row);
     });
-    if(!Array.isArray(st.skills) || st.skills.length!==4) st.skills = ["Visual","Sound","Programming","Project Management"];
-    if(typeof st.participants!=='number') st.participants = 0;
-    if(typeof st.currentTeam!=='number') st.currentTeam = 0;
-    if(typeof st.currentCard!=='number') st.currentCard = 0;
-    if(!Array.isArray(st.groupNames)) st.groupNames = ["Group 1","Group 2"];
-    if(typeof st.setupDone!=='boolean') st.setupDone = false;
-    if(typeof st.scoringEnded!=='boolean') st.scoringEnded = false;
-    if(typeof st.endWhy!=='string') st.endWhy = "";
-    return st;
   }
-
-  function loadState(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return null;
-      const parsed = JSON.parse(raw);
-      if(!parsed || !Array.isArray(parsed.teams)) return null;
-      return parsed;
-    }catch(e){ return null; }
+  function renderFinal(){
+    const wrap=$("#finalList"); wrap.innerHTML="";
+    S.teams.forEach((t,i)=>{
+      if(i>3 && (!t.cards || t.cards.length===0)) return;
+      const card=document.createElement("div"); card.className="team-card";
+      const title=document.createElement("div"); title.className="team-title"; title.textContent=`Team ${i+1}`; card.appendChild(title);
+      const ul=document.createElement("ul"); ul.style.margin="0"; ul.style.paddingLeft="18px";
+      for(let k=0;k<4;k++){ const name=t.names[k]||"(empty)"; const vals=t.cards[k]||[0,0,0,0]; const li=document.createElement("li"); li.textContent=`${name} · ${vals.join("-")}`; ul.appendChild(li); }
+      if(t.extras && t.extras.length){ const li=document.createElement("li"); li.innerHTML="<em>Extras:</em>"; ul.appendChild(li);
+        t.extras.forEach(ex=>{ const li2=document.createElement("li"); li2.textContent=`${ex.name} · ${ex.values.join("-")} (extra)`; ul.appendChild(li2); });
+      }
+      card.appendChild(ul); wrap.appendChild(card);
+    });
   }
-  function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-  function saveAndRender(){ saveState(); render(); }
-
-  function scoringGroupFor(teamIdx, cardIdx){
-    const t = state.teams[teamIdx];
-    if(cardIdx === 0) return {idx:-1, name:'No scoring on first card'};
-    if(cardIdx === 1) return {idx: t.pairToGroup, name: state.groupNames[t.pairToGroup]};
-    if(cardIdx === 2) return {idx: t.tripToGroup, name: state.groupNames[t.tripToGroup]};
-    return {idx: t.quadToGroup, name: state.groupNames[t.quadToGroup]};
+  function showSection(which){
+    $("#setupSec").classList.toggle("hidden", which!=="setup");
+    $("#playSec").classList.toggle("hidden", which!=="play");
+    $("#endSec").classList.toggle("hidden", which!=="end");
+    $("#intakeSec").classList.toggle("hidden", which!=="intake");
+    $("#finalSec").classList.toggle("hidden", which!=="final");
+    renderHeader();
+    if(which==="play"){ renderPlay(); fairnessCheckMaybe(); }
+    if(which==="end"){ renderEnd(); }
+    if(which==="intake"){ buildIntakeRows(); }
+    if(which==="final"){ renderFinal(); }
   }
-
-
   function render(){
-    if(!state.setupDone){ mountSetup(); return; }
-
-    if(state.scoringEnded){ show(playPanel,false); if(settingsFooter) settingsFooter.style.display='none'; show(scorePanel,true); show(intakePanel,false); show(endPanel,false); renderScorePanel(); return; }
-    show(playPanel,true); if(settingsFooter) settingsFooter.style.display='block'; show(scorePanel,false); show(intakePanel,false); show(endPanel,false);
-
-    // header names & live scores
-    g1n.textContent = state.groupNames[0];
-    g2n.textContent = state.groupNames[1];
-    const totals = computeTotals(); g1s.textContent = totals[0]; g2s.textContent = totals[1];
-
-    // progress vs participants
-    const lockedCards = totalLockedCards();
-    if(state.participants && state.participants>0){
-      const pct = clamp(Math.round((lockedCards/state.participants)*100),0,100);
-      progressWrap.style.display='block'; progressPill.style.display='inline-block'; progBar.style.width=pct+'%'; progTxt.textContent=pct+'%';
-    } else { progressWrap.style.display='none'; progressPill.style.display='none'; }
-
-  // Turn info
-const tIdx = state.currentTeam, cIdx = state.currentCard;
-turnWho.textContent = `Now creating Team ${tIdx+1}`;
-turnCard.textContent = `Card ${cIdx+1} / 4`;
-
-// Determine who picks this card (alternates within the team)
-// pairToGroup = the NON-starter that scores the Pair stage → starter is the other group
-const team = state.teams[tIdx];
-const starterIdx = 1 - team.pairToGroup;           // 0 or 1
-const pickerIdx = (cIdx % 2 === 0) ? starterIdx : (1 - starterIdx);
-const gname = state.groupNames[pickerIdx];
-
-if (turnPrompt) {
-  if (cIdx === 0) {
-    turnPrompt.innerHTML = `<span class="accent">${gname}</span>, pick a card <span class="grayed">(no points this card)</span>`;
-  } else {
-    turnPrompt.innerHTML = `<span class="accent">${gname}</span>, pick a card`;
+    if(!S.setupDone){
+      $("#skill0").value=S.skills[0]; $("#skill1").value=S.skills[1]; $("#skill2").value=S.skills[2]; $("#skill3").value=S.skills[3];
+      $("#participants").value=S.participants||""; $("#gname0").value=S.groupNames[0]; $("#gname1").value=S.groupNames[1];
+      $$("input[name='remainderMode']").forEach(r=>r.checked=(r.value===S.remainderMode));
+      showSection("setup");
+    }else if(S.scoringEnded || allTeamsComplete()){
+      if(allTeamsComplete() && !S.scoringEnded){ S.endWhy="All teams completed."; save(); }
+      showSection("end");
+    }else{
+      showSection("play");
+    }
+    $("#dgname0").value=S.groupNames[0]; $("#dgname1").value=S.groupNames[1];
+    $("#dparticipants").value=S.participants||""; $("#dremainder").value=S.remainderMode;
+    $("#dskill0").value=S.skills[0]; $("#dskill1").value=S.skills[1]; $("#dskill2").value=S.skills[2]; $("#dskill3").value=S.skills[3];
+    renderOwnerEditor();
   }
-}
 
-    // Inputs (name + 4 skills)
-    inputs.innerHTML='';
-    inputs.classList.add('cardgrid');
-    const t = state.teams[tIdx];
-    // Name
-    const nameWrap = document.createElement('div');
-    const nameLab = document.createElement('label'); nameLab.textContent = "Card name (student)";
-    const nameInp = document.createElement('input'); nameInp.type='text'; nameInp.placeholder='Name on this card'; nameInp.value = t.names[cIdx] || "";
-    nameInp.addEventListener('input', ()=>{ t.names[cIdx] = nameInp.value; saveState(); });
-    nameWrap.appendChild(nameLab); nameWrap.appendChild(nameInp); inputs.appendChild(nameWrap);
-    // Skills
-    for(let s=0;s<4;s++){
-      const d=document.createElement('div'); const lab=document.createElement('label'); lab.textContent = state.skills[s];
-      const inp=document.createElement('input'); inp.type='number'; inp.min='0'; inp.max='20'; inp.step='1'; inp.value=t.cards[cIdx][s];
-      inp.addEventListener('input', ()=>{ t.cards[cIdx][s] = toNum(inp.value); updateSumState(); saveState(); });
-      d.appendChild(lab); d.appendChild(inp); inputs.appendChild(d);
+  $("#startBtn").addEventListener("click", ()=>{
+    const sk=[$("#skill0").value||"Visual", $("#skill1").value||"Sound", $("#skill2").value||"Programming", $("#skill3").value||"Project Management"];
+    const part=parseInt($("#participants").value||"0",10)||0;
+    const g0=$("#gname0").value||"Group 1"; const g1=$("#gname1").value||"Group 2";
+    const rem=$$("input[name='remainderMode']").find(r=>r.checked)?.value || "distribute";
+    S.skills=sk; S.participants=part; S.groupNames=[g0,g1]; S.remainderMode=rem==="ownTeam"?"ownTeam":"distribute"; S.setupDone=true; save(); render();
+  });
+
+  $("#toggleDrawer").addEventListener("click", ()=>{ const d=$("#drawer"); d.classList.toggle("open"); $("#toggleDrawer").setAttribute("aria-expanded", d.classList.contains("open")?"true":"false"); });
+  $("#drawerSave").addEventListener("click", ()=>{
+    S.groupNames[0]=$("#dgname0").value||"Group 1"; S.groupNames[1]=$("#dgname1").value||"Group 2";
+    S.participants=parseInt($("#dparticipants").value||"0",10)||0;
+    S.remainderMode=$("#dremainder").value==="ownTeam"?"ownTeam":"distribute";
+    S.skills=[$("#dskill0").value||"Visual", $("#dskill1").value||"Sound", $("#dskill2").value||"Programming", $("#dskill3").value||"Project Management"];
+    save(); render();
+  });
+
+  $("#prevTeam").addEventListener("click", ()=>{ S.currentTeam=(S.currentTeam+S.teams.length-1)%S.teams.length; save(); render(); });
+  $("#nextTeam").addEventListener("click", ()=>{ S.currentTeam=(S.currentTeam+1)%S.teams.length; save(); render(); });
+  $("#backCard").addEventListener("click", ()=>{ if(S.currentCard>0){ S.currentCard--; save(); render(); } });
+  $("#resetBtn").addEventListener("click", ()=>{ if(confirm("Clear all data and restart?")) resetAll(); });
+
+  $("#lockBtn").addEventListener("click", ()=>{
+    const ti=S.currentTeam, ci=S.currentCard, t=S.teams[ti];
+    if(t.locked[ci]) return;
+    if(sum(t.cards[ci])!==20){ alert("Sum must be exactly 20."); return; }
+    t.locked[ci]=true;
+    const {stage,target,max}=stageTargetForCardIndex(ci);
+    let title="", ownerText="", percent=0, items=[];
+    if(stage==="baseline"){
+      title="First card locked — No score yet."; ownerText="No points for baseline (Card 1)."; percent=0; S.lastLock={team:ti,card:ci,stage,owner:-1,points:0,values:[...t.cards[ci]]};
+    }else{
+      const sums=teamSumUpTo(t,ci); const r=stagePointsFromSums(sums,target); const owner=ownerForStage(t,stage);
+      S.totals[owner]+=r.pts; percent=Math.round((r.pts/max)*100);
+      title=`${stage[0].toUpperCase()+stage.slice(1)} score — ${r.pts} / ${max} (${percent}%)`;
+      ownerText=`Points → ${S.groupNames[owner]}`;
+      items=r.perSkill.map((ps,idx)=>{ const nm=skillNames()[idx]; const d=ps.delta; if(d===0) return {text:`${nm}: On target`, cls:"sum-ok"}; if(d>0) return {text:`${nm}: +${d} over`, cls:"sum-over"}; return {text:`${nm}: ${d} under`, cls:"sum-under"}; });
+      S.lastLock={team:ti,card:ci,stage,owner,points:r.pts,values:[...t.cards[ci]]};
+    }
+    save(); showOverlay(title, ownerText, percent, items);
+  });
+  function showOverlay(title, ownerText, percent, items){
+    $("#overlayTitle").textContent=title; $("#overlayOwner").textContent=ownerText;
+    $("#overlayPB").style.width=percent+"%"; const tags=$("#overlayStats"); tags.innerHTML=""; const list=$("#overlayList"); list.innerHTML="";
+    items.forEach(it=>{ const tag=document.createElement("span"); tag.className="tag "+(it.cls||""); tag.textContent=it.text; tags.appendChild(tag);
+      const li=document.createElement("li"); li.className=it.cls||""; li.textContent=it.text; list.appendChild(li); });
+    $("#overlay").classList.add("show");
+  }
+  $("#overlayClose").addEventListener("click", ()=>{
+    $("#overlay").classList.remove("show");
+    if(S.currentCard<3){ S.currentCard++; } else { S.currentCard=0; S.currentTeam=(S.currentTeam+1)%S.teams.length; }
+    save();
+    if(allTeamsComplete()){ S.endWhy="All teams completed."; S.scoringEnded=true; save(); showSection("end"); } else { render(); }
+  });
+  $("#overlayUndo").addEventListener("click", ()=>{
+    const last=S.lastLock; if(!last){ alert("Nothing to undo."); return; }
+    const t=S.teams[last.team];
+    if(last.stage!=="baseline" && last.owner>=0){ S.totals[last.owner]=Math.max(0, S.totals[last.owner] - (last.points||0)); }
+    t.locked[last.card]=false; t.cards[last.card]=[...last.values]; S.currentTeam=last.team; S.currentCard=last.card; S.lastLock=null; save();
+    $("#overlay").classList.remove("show"); render();
+  });
+
+  $("#toIntake").addEventListener("click", ()=>{ showSection("intake"); });
+  $("#toFinal").addEventListener("click", ()=>{ showSection("final"); });
+
+  function buildIntakeRows(){
+    const wrap=$("#intakeRows"); wrap.innerHTML="";
+    const remaining=Math.max(1, (S.participants||0)-totalEnteredCards());
+    for(let i=0;i<remaining;i++) addIntakeRow();
+  }
+  function addIntakeRow(){
+    const wrap=$("#intakeRows"); const row=document.createElement("div"); row.className="row"; row.style.flexWrap="nowrap"; row.style.gap="8px";
+    const name=document.createElement("input"); name.type="text"; name.placeholder="Name"; name.style.minWidth="120px";
+    const inputs=[]; for(let i=0;i<4;i++){ const n=document.createElement("input"); n.type="number"; n.min="0"; n.max="20"; n.step="1"; n.placeholder=skillNames()[i]; n.style.width="80px"; inputs.push(n); }
+    const sumTag=document.createElement("span"); sumTag.className="tag"; sumTag.textContent="Sum: 0/20";
+    function update(){ const s=inputs.reduce((a,b)=>a+(parseInt(b.value||"0",10)||0),0); sumTag.textContent=`Sum: ${s}/20`; sumTag.className="tag "+(s===20?"sum-ok":(s<20?"sum-under":"sum-over")); }
+    inputs.forEach(n=>n.addEventListener("input", update));
+    row.appendChild(name); inputs.forEach(n=>row.appendChild(n)); row.appendChild(sumTag); wrap.appendChild(row);
+  }
+  $("#addRow").addEventListener("click", addIntakeRow);
+
+  $("#assignAuto").addEventListener("click", ()=>{
+    const rows=Array.from($("#intakeRows").children); const cards=[];
+    rows.forEach(r=>{ const name=r.querySelector('input[type="text"]').value.trim()||"Unnamed";
+      const nums=Array.from(r.querySelectorAll('input[type="number"]')).map(n=>parseInt(n.value||"0",10)||0);
+      if(sum(nums)===20) cards.push({name, values:nums}); });
+    if(cards.length===0){ alert("No valid rows (sum=20) to assign."); return; }
+
+    function nextStageInfoForTeam(t){
+      const present = presentCountForTeamIndex(t);
+      if(present<=0) return {stage:"pair", idx:1, target:10, effective:false};
+      if(present===1) return {stage:"pair", idx:1, target:10, effective:true};
+      if(present===2) return {stage:"triplet", idx:2, target:15, effective:true};
+      return {stage:"quartet", idx:3, target:20, effective:true};
+    }
+    function presentCountForTeamIndex(team){
+      let k=0; for(let ci=0;ci<4;ci++){ const vals=team.cards[ci]||[0,0,0,0]; const n=(team.names[ci]||"").trim();
+        if(team.locked[ci] || n || vals.some(v=>v>0)) k++; } return k;
+    }
+    function predPoints(team, stageInfo, candVals){
+      const idx=stageInfo.idx; const sums=teamSumUpTo(team, Math.min(idx-1,3));
+      for(let k=0;k<4;k++) sums[k]+=candVals[k];
+      const r=stagePointsFromSums(sums, stageInfo.target); return r.pts;
+    }
+    function placeCardInTeam(team, card){
+      for(let i=0;i<4;i++){
+        if(!(team.names[i]||"").trim() && sum(team.cards[i])===0 && !team.locked[i]){ team.names[i]=card.name; team.cards[i]=[...card.values]; team.locked[i]=true; return true; }
+      }
+      for(let i=0;i<4;i++){
+        if(!team.locked[i]){ team.names[i]=team.names[i] || card.name; team.cards[i]=[...card.values]; team.locked[i]=true; return true; }
+      }
+      return false;
     }
 
-    prevCardBtn.disabled = (cIdx===0);
-    const _can = canLockCard(t.cards[cIdx]); lockBtn.disabled = !_can;
-    updateSumState();
+    const pool=cards.slice();
 
-    // fairness checks if participants known
-    if(state.participants>0) checkFairnessAndMaybeEnd();
-  }
+    // DISTRIBUTE MODE: only fill teams that already have at least one member; otherwise extras later
+    const baseTeams=S.teams.slice(0,4);
+    const eligibleTeams=(S.remainderMode==="distribute") ? baseTeams.filter(t=>presentCountForTeamIndex(t)>0) : baseTeams;
 
-  function updateSumState(){
-    const t = state.teams[state.currentTeam], c = state.currentCard;
-    const sum = t.cards[c].reduce((a,b)=>a+toNum(b),0);
-    sumState.textContent = `Sum: ${sum} / 20`;
-    if(sum===20){
-      sumHint.textContent='Looks good – ready to lock'; sumHint.className='state ok';
-      if (lockBtn) lockBtn.disabled = false;
-    } else if(sum<20){
-      sumHint.textContent=`Under by ${20-sum}`; sumHint.className='state warn';
-      if (lockBtn) lockBtn.disabled = true;
-    } else {
-      sumHint.textContent=`Over by ${sum-20}`; sumHint.className='state bad';
-      if (lockBtn) lockBtn.disabled = true;
-    }
-  }
-
-
-  function canLockCard(arr){ if(!Array.isArray(arr)) return false; const sum = arr.reduce((a,b)=>a+toNum(b),0); return Number.isFinite(sum) && sum===20; }
-
-  // Feedback
-  function onLockCard(){
-    const t = state.teams[state.currentTeam], c = state.currentCard;
-    if(!canLockCard(t.cards[c])) return;
-    t.locked[c] = true; saveState();
-
-    const info = feedbackInfo(state.currentTeam, c);
-
-    // advance pointer
-    if(c<3){ state.currentCard += 1; } else { state.currentCard=0; state.currentTeam = (state.currentTeam+1)%state.teams.length; }
-    saveState();
-
-    showFeedback(info);
-  }
-  function feedbackInfo(teamIdx, lockedCardIdx){
-    if(lockedCardIdx===0){
-      return {title:"First card locked", sub:"No score yet — scoring starts at the Pair (second card).", percent:0, lines: state.skills.map(s=>({skill:s, cls:'warn', deltaText:'Baseline set'}))};
-    }
-    const cfg = (lockedCardIdx===1)?{name:"Pair", target:10, cards:[0,1], max:40}
-              :(lockedCardIdx===2)?{name:"Triplet", target:15, cards:[0,1,2], max:60}
-              :{name:"Quartet", target:20, cards:[0,1,2,3], max:80};
-    const t = state.teams[teamIdx];
-    let points=0; const lines=[];
-    for(let s=0;s<4;s++){
-      let sum=0; cfg.cards.forEach(ci=> sum += toNum(t.cards[ci][s]));
-      const delta = sum - cfg.target; const absd=Math.abs(delta);
-      const per = (cfg.target - absd); if(per>0) points+=per;
-      let cls='bad'; if(absd===0) cls='good'; else if(absd<=2) cls='warn';
-      lines.push({skill: state.skills[s], cls, deltaText: (delta===0?'On target':(delta>0?`+${delta} over`:`${delta} under`))});
-    }
-    const percent = (points/cfg.max)*100;
-    const sub = percent===100?'Perfect balance!': percent>=85?'Excellent balance — very close to target.': percent>=70?'Good — some room to optimize.': percent>=50?'Fair — consider rebalancing.':'Needs work — far from target.';
-    const award = (lockedCardIdx===1)? state.groupNames[state.teams[teamIdx].pairToGroup] : (lockedCardIdx===2? state.groupNames[state.teams[teamIdx].tripToGroup] : state.groupNames[state.teams[teamIdx].quadToGroup]);
-    return {title:`${cfg.name} — ${Math.round(percent)}%`, sub, percent, lines, awardTo: award};
-  }
-  function showFeedback(info){
-    fbHeader.textContent = info.title;
-    fbSub.textContent = (info.sub ? info.sub + ' · ' : '') + (info.awardTo ? ('Points → ' + info.awardTo) : '');
-    fbList.innerHTML = '';
-    info.lines.forEach(l=>{
-      const li=document.createElement('li'); li.className='li';
-      const left=document.createElement('div'); left.textContent=l.skill;
-      const right=document.createElement('div'); right.className='delta '+(l.cls||''); right.textContent=l.deltaText;
-      li.appendChild(left); li.appendChild(right); fbList.appendChild(li);
-    });
-    fbProgress.style.width='0%';
-    setTimeout(()=>{ fbProgress.style.width = Math.round(info.percent||0)+'%'; }, 40);
-    fbOverlay.style.display='flex'; fbOverlay.style.pointerEvents='auto';
-    requestAnimationFrame(()=> fbOverlay.classList.add('show'));
-  }
-
-  // Navigation
-  function changeTeam(delta){ state.currentTeam = (state.currentTeam + delta + state.teams.length)%state.teams.length; saveAndRender(); }
-  function changeCard(delta){ state.currentCard = clamp(state.currentCard + delta, 0, 3); saveAndRender(); }
-
-  // Scoring
-  function stagePoints(target, idxs, t){ let pts=0; for(let s=0;s<4;s++){ let sum=0; idxs.forEach(ci=> sum+= toNum(t.cards[ci][s])); pts += (target - Math.abs(target - sum)); } return pts; }
-  function computeTotals(){
-    let totals=[0,0];
-    state.teams.forEach((t)=>{
-      if(t.locked[0] && t.locked[1]) totals[t.pairToGroup]+= stagePoints(10,[0,1],t);
-      if(t.locked[0] && t.locked[1] && t.locked[2]) totals[t.tripToGroup]+= stagePoints(15,[0,1,2],t);
-      if(t.locked[0] && t.locked[1] && t.locked[2] && t.locked[3]) totals[t.quadToGroup]+= stagePoints(20,[0,1,2,3],t);
-    });
-    return totals;
-  }
-  function totalLockedCards(){ return state.teams.reduce((acc,t)=> acc + t.locked.filter(Boolean).length, 0); }
-  function teamsCompleted(){ return state.teams.filter(t=> t.locked.every(Boolean)).length; }
-  function cardsNeededToFinishCurrentTeam(){ const t = state.teams[state.currentTeam]; const k = t.locked.filter(Boolean).length; return Math.max(0, 4-k); }
-  function countScoringRounds(){
-    let c=[0,0];
-    state.teams.forEach((t)=>{
-      if(t.locked[0] && t.locked[1]) c[t.pairToGroup]++;
-      if(t.locked[0] && t.locked[1] && t.locked[2]) c[t.tripToGroup]++;
-      if(t.locked[0] && t.locked[1] && t.locked[2] && t.locked[3]) c[t.quadToGroup]++;
-    });
-    return c;
-  }
-
-  // Fairness guard
-  function checkFairnessAndMaybeEnd(){
-    const locked = totalLockedCards();
-    const remaining = Math.max(0, (state.participants||0) - locked);
-    if((state.participants||0) <= 0) return;
-
-    if(remaining < cardsNeededToFinishCurrentTeam()){
-      return endScoring(`Fairness no longer possible: only ${remaining} cards left, but ${cardsNeededToFinishCurrentTeam()} needed to finish the current team.`);
-    }
-    if(teamsCompleted() % 2 === 1 && remaining < 4){
-      return endScoring(`Fairness no longer possible: one team of a starter pair is finished and fewer than 4 cards remain to complete the matching team.`);
-    }
-  }
-  function endScoring(reason){
-    state.scoringEnded = true; state.endWhy = reason || 'Fairness limit reached.'; saveState();
-    renderScorePanel(); show(playPanel,false); show(scorePanel,true); show(intakePanel,false); show(endPanel,false);
-  }
-  function renderScorePanel(){
-    endReason.textContent = state.endWhy || 'Fairness limit reached.';
-    const totals = computeTotals();
-    let txt = `${state.groupNames[0]} ${totals[0]} — ${totals[1]} ${state.groupNames[1]}`;
-    if(totals[0]>totals[1]) txt += ` · ${state.groupNames[0]} wins`;
-    else if(totals[1]>totals[0]) txt += ` · ${state.groupNames[1]} wins`;
-    else txt += ' · It’s a tie!';
-    winnerText.textContent = txt;
-  }
-
-  // Intake
-  function renderIntake(){
-    intakeList.innerHTML='';
-    const remaining = (state.participants>0) ? Math.max(0, state.participants - totalLockedCards()) : 0;
-    intakeSub.textContent = remaining>0 ? `Estimated remaining cards to add: ${remaining}. Fill in name + four skills (sum must be 20).` : `Add any remaining cards (name + four skills, sum 20).`;
-    const rows = remaining>0 ? remaining : 1;
-    for(let i=0;i<rows;i++) addIntakeRow();
-  }
-  function addIntakeRow(prefill=null){
-    const idx = intakeList.childElementCount + 1;
-    const box = document.createElement('div'); box.className='intakeRow';
-    const head = document.createElement('div'); head.className='intakeHeader';
-    const title = document.createElement('div'); title.textContent = `Card ${idx}`;
-    const sumTag = document.createElement('div'); sumTag.className='sumtag'; sumTag.textContent='Sum 0/20';
-    head.appendChild(title); head.appendChild(sumTag); box.appendChild(head);
-    const grid = document.createElement('div'); grid.className='grid cardgrid';
-    // name
-    const nameWrap = document.createElement('div');
-    const nameLab = document.createElement('label'); nameLab.textContent='Name';
-    const nameInp = document.createElement('input'); nameInp.type='text'; nameInp.placeholder='Student name';
-    nameWrap.appendChild(nameLab); nameWrap.appendChild(nameInp); grid.appendChild(nameWrap);
-    const fields=[];
-    for(let s=0;s<4;s++){
-      const d=document.createElement('div'); const lab=document.createElement('label'); lab.textContent=state.skills[s];
-      const inp=document.createElement('input'); inp.type='number'; inp.min='0'; inp.max='20'; inp.step='1'; inp.value=0;
-      d.appendChild(lab); d.appendChild(inp); grid.appendChild(d); fields.push(inp);
-    }
-    box.appendChild(grid); intakeList.appendChild(box);
-    function refresh(){ const sum = fields.reduce((a,b)=>a+toNum(b.value),0); sumTag.textContent = `Sum ${sum}/20`; sumTag.className='sumtag '+(sum===20?'ok':(sum<20?'warn':'bad')); }
-    fields.forEach(inp=> inp.addEventListener('input', refresh)); refresh();
-    if(prefill){ nameInp.value=prefill.name||''; fields.forEach((inp,i)=> inp.value=prefill.values[i]||0); refresh(); }
-  }
-  function assignIntakeAndContinue(){
-    const pool=[]; const rows = intakeList.querySelectorAll('.intakeRow');
-    rows.forEach(row=>{
-      const name = row.querySelector('input[type=text]').value.trim();
-      const nums = Array.from(row.querySelectorAll('input[type=number]')).map(x=> toNum(x.value));
-      const sum = nums.reduce((a,b)=>a+b,0);
-      if(sum===20) pool.push({values:nums, name});
-    });
-    if(!pool.length){ alert('Please enter at least one complete (sum 20) card or skip to Teams.'); return; }
-    autoAssignPool(pool);
-    show(intakePanel,false); show(endPanel,true); renderEnd();
-  }
-  function nextStageForTeam(t){
-    let present=0;
-    for(let i=0;i<4;i++){ if(t.locked[i] || (t.cards[i] && t.cards[i].some(v=>v>0))) present++; }
-    if(present<=0) return {idx:0, target:10, consider:[0,1]};
-    if(present===1) return {idx:1, target:10, consider:[0,1]};
-    if(present===2) return {idx:2, target:15, consider:[0,1,2]};
-    return {idx:3, target:20, consider:[0,1,2,3]};
-  }
-  function stageGain(t, stage, candidateValues){
-    const backup = (t.cards[stage.idx]||[0,0,0,0]).slice();
-    t.cards[stage.idx] = candidateValues.slice();
-    let pts=0; for(let s=0;s<4;s++){ let sum=0; stage.consider.forEach(ci=> sum += toNum((t.cards[ci]||[0,0,0,0])[s])); pts += (stage.target - Math.abs(stage.target - sum)); }
-    t.cards[stage.idx] = backup; return pts;
-  }
-  function autoAssignPool(pool){
     while(pool.length){
+      const allFull = eligibleTeams.length>0 && eligibleTeams.every(t=>t.locked.filter(Boolean).length>=4);
+      if(allFull) break;
       let best=null;
-      for(let ti=0; ti<state.teams.length; ti++){
-        const t = state.teams[ti];
-        const filled = t.cards.filter(ca => ca && ca.some(v=>v>0)).length;
-        if(filled>=4) continue;
-        const stage = nextStageForTeam(t);
-        for(let pi=0; pi<pool.length; pi++){
-          const g = stageGain(t, stage, pool[pi].values);
-          if(!best || g>best.gain){ best = {team:ti, stage, poolIndex:pi, gain:g}; }
+      for(let ti=0;ti<eligibleTeams.length;ti++){
+        const team=eligibleTeams[ti]; const realTi=S.teams.indexOf(team);
+        if(team.locked.filter(Boolean).length>=4) continue;
+        const stageInfo=nextStageInfoForTeam(team);
+        for(let ci=0;ci<pool.length;ci++){
+          const card=pool[ci]; const pts=stageInfo.effective ? predPoints(team,stageInfo,card.values) : 0;
+          const score=pts + (stageInfo.effective?10:0);
+          if(!best || score>best.score){ best={ti:realTi, ci, score}; }
         }
       }
       if(!best) break;
-      const card = pool.splice(best.poolIndex,1)[0];
-      const t = state.teams[best.team];
-      t.cards[best.stage.idx] = card.values.slice();
-      if(!(t.names[best.stage.idx] && t.names[best.stage.idx].trim()!=="")) t.names[best.stage.idx] = card.name || "";
+      const card=pool.splice(best.ci,1)[0];
+      const ok=placeCardInTeam(S.teams[best.ti], card);
+      if(!ok){ S.teams[best.ti].extras.push(card); }
     }
-    saveState();
-  }
 
-  // Final Teams & Export
-  function renderEnd(){
-    teamsList.innerHTML='';
-    state.teams.forEach((t,i)=>{
-      const div=document.createElement('div'); div.className='teamCard';
-      const h=document.createElement('h3'); h.textContent=`Team ${i+1}`; div.appendChild(h);
-      for(let k=0;k<4;k++){
-        if(t.names[k] || t.cards[k].some(v=>v>0)){
-          const row=document.createElement('div'); row.className='member';
-          const left=document.createElement('div'); left.textContent = t.names[k] || `(Card ${k+1})`;
-          const right=document.createElement('div'); right.textContent = t.cards[k].join('-');
-          row.appendChild(left); row.appendChild(right); div.appendChild(row);
+    const leftovers=pool.slice();
+    if(leftovers.length){
+      if(S.remainderMode==="ownTeam"){
+        let overflow=S.teams[4]; if(!overflow){ overflow=defaultTeam(4); S.teams.push(overflow); }
+        for(const c of leftovers.splice(0,4)){
+          for(let i=0;i<4;i++){ if(sum(overflow.cards[i])===0 && !overflow.names[i]){ overflow.cards[i]=[...c.values]; overflow.names[i]=c.name; overflow.locked[i]=true; break; } }
+        }
+        leftovers.forEach(c=>overflow.extras.push(c));
+      }else{
+        function fiveScore(team,cand){
+          const base=[0,0,0,0];
+          for(let i=0;i<4;i++){ const v=team.cards[i]||[0,0,0,0]; for(let k=0;k<4;k++) base[k]+=v[k]; }
+          for(let k=0;k<4;k++) base[k]+=cand.values[k];
+          let pts=0; for(let k=0;k<4;k++){ const d=Math.abs(25-base[k]); pts+=25-d; } return pts;
+        }
+        while(leftovers.length){
+          let best=null;
+          for(let ti=0;ti<4;ti++){
+            const team=S.teams[ti];
+            for(let ci=0;ci<leftovers.length;ci++){
+              const cand=leftovers[ci]; const sc=fiveScore(team,cand);
+              if(!best || sc>best.sc){ best={ti,ci,sc}; }
+            }
+          }
+          const pick=leftovers.splice(best.ci,1)[0]; S.teams[best.ti].extras.push(pick);
         }
       }
-      if(Array.isArray(t.extras) && t.extras.length){
-        t.extras.forEach((ex, ix)=>{
-          const row=document.createElement('div'); row.className='member';
-          const left=document.createElement('div'); left.textContent = ex.name ? `${ex.name} (extra)` : `(Extra ${ix+1})`;
-          const right=document.createElement('div'); right.textContent = ex.values.join('-');
-          row.appendChild(left); row.appendChild(right); div.appendChild(row);
-        });
-      }
-      teamsList.appendChild(div);
-    });
-  }
-  function exportData(){
-    return {
-      groupNames: state.groupNames.slice(),
-      skills: state.skills.slice(),
-      teams: state.teams.map((t,i)=> ({
-        team:i+1,
-        members: [
-          ...t.cards.map((vals,idx)=>({
-            slot: idx+1, name: t.names[idx]||"", values: vals.slice(), extra:false
-          })),
-          ...(Array.isArray(t.extras)? t.extras.map((ex,ix)=> ({ slot: 5+ix, name: ex.name||"", values: ex.values.slice(), extra:true })) : [])
-        ]
-      }))
-    };
-  }
-  function makeCSV(){
-    const rows=[];
-    rows.push(['Team','Slot','Name',...state.skills].join(','));
-    state.teams.forEach((t,i)=>{
-      t.cards.forEach((vals, idx)=>{
-        const name = (t.names[idx]||'').replace(/"/g,'""');
-        const cols=[String(i+1), String(idx+1), `"${name}"`, ...vals.map(v=>String(v))];
-        rows.push(cols.join(','));
-      });
-      if(Array.isArray(t.extras)){
-        t.extras.forEach((ex, ix)=>{
-          const name = (ex.name||'').replace(/"/g,'""');
-          const cols=[String(i+1), String(5+ix), `"${name}"`, ...ex.values.map(v=>String(v))];
-          rows.push(cols.join(','));
-        });
-      }
-    });
-    return rows.join('\n');
-  }
-  function downloadText(text, filename, mime){
-    const blob=new Blob([text], {type:mime}); const url=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click();
-    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
-  }
+    }
 
-})(); // IIFE
-}); // DOMContentLoaded
-</script>
+    save(); showSection("final");
+  });
+
+  function download(filename,text,mime){ const blob=new Blob([text],{type:mime||"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },200); }
+  $("#exportCSV").addEventListener("click", ()=>{
+    const rows=[["Team","Slot","Name",...skillNames()]];
+    S.teams.forEach((t,i)=>{
+      for(let k=0;k<4;k++){ rows.push([`Team ${i+1}`, String(k+1), t.names[k]||"", ...(t.cards[k]||[0,0,0,0])]); }
+      if(t.extras && t.extras.length){ t.extras.forEach((ex,idx)=>{ rows.push([`Team ${i+1}`, String(5+idx), ex.name||"", ...(ex.values||[0,0,0,0])]); }); }
+    });
+    const csv=rows.map(r=>r.map(v=>String(v).includes(",")?`"${String(v).replace(/"/g,'""')}"`:String(v)).join(",")).join("\n");
+    download("teams.csv", csv, "text/csv");
+  });
+  $("#exportJSON").addEventListener("click", ()=>{
+    const out={groupNames:S.groupNames, skills:S.skills, remainderMode:S.remainderMode,
+      teams:S.teams.map(t=>({cards:t.cards, names:t.names, locked:t.locked, extras:t.extras, pairToGroup:t.pairToGroup, tripToGroup:t.tripToGroup, quadToGroup:t.quadToGroup}))};
+    download("teams.json", JSON.stringify(out,null,2), "application/json");
+  });
+  $("#restart").addEventListener("click", ()=>{ if(confirm("This clears storage and reloads.")){ localStorage.removeItem(LSKEY); location.reload(); } });
+
+  render();
+})();</script>
 </body>
 </html>
