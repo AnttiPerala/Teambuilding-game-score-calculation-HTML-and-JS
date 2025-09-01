@@ -619,14 +619,25 @@ document.addEventListener('DOMContentLoaded', function(){
       progressWrap.style.display='block'; progressPill.style.display='inline-block'; progBar.style.width=pct+'%'; progTxt.textContent=pct+'%';
     } else { progressWrap.style.display='none'; progressPill.style.display='none'; }
 
-    // Turn info
-    const tIdx = state.currentTeam, cIdx = state.currentCard;
-    turnWho.textContent = `Now creating Team ${tIdx+1}`; turnCard.textContent = `Card ${cIdx+1} / 4`;
-    if (turnPrompt){
-      const gname = state.groupNames[tIdx%2];
-      if(cIdx===0){ turnPrompt.innerHTML = `<span class="accent">${gname}</span>, pick a card <span class="grayed">(no points this card)</span>`; }
-      else { turnPrompt.innerHTML = `<span class="accent">${gname}</span>, pick a card`; }
-    }
+  // Turn info
+const tIdx = state.currentTeam, cIdx = state.currentCard;
+turnWho.textContent = `Now creating Team ${tIdx+1}`;
+turnCard.textContent = `Card ${cIdx+1} / 4`;
+
+// Determine who picks this card (alternates within the team)
+// pairToGroup = the NON-starter that scores the Pair stage → starter is the other group
+const team = state.teams[tIdx];
+const starterIdx = 1 - team.pairToGroup;           // 0 or 1
+const pickerIdx = (cIdx % 2 === 0) ? starterIdx : (1 - starterIdx);
+const gname = state.groupNames[pickerIdx];
+
+if (turnPrompt) {
+  if (cIdx === 0) {
+    turnPrompt.innerHTML = `<span class="accent">${gname}</span>, pick a card <span class="grayed">(no points this card)</span>`;
+  } else {
+    turnPrompt.innerHTML = `<span class="accent">${gname}</span>, pick a card`;
+  }
+}
 
     // Inputs (name + 4 skills)
     inputs.innerHTML='';
