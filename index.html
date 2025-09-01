@@ -106,6 +106,7 @@
         <div class="who" id="turnWho">Team 1</div>
         <div class="card" id="turnCard">Card 1 / 4</div>
       </div>
+      <div id="turnPrompt" style="font-size:20px; font-weight:700; margin-top:8px">Group 1, pick a card</div>
 
       <div class="grid cardgrid" id="inputs"></div>
 
@@ -290,6 +291,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   const turnWho = document.getElementById('turnWho');
   const turnCard = document.getElementById('turnCard');
+  const turnPrompt = document.getElementById('turnPrompt');
   const inputs = document.getElementById('inputs');
   const sumState = document.getElementById('sumState');
   const sumHint = document.getElementById('sumHint');
@@ -561,6 +563,15 @@ document.addEventListener('DOMContentLoaded', function(){
   function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
   function saveAndRender(){ saveState(); render(); }
 
+  function scoringGroupFor(teamIdx, cardIdx){
+    const t = state.teams[teamIdx];
+    if(cardIdx === 0) return {idx:-1, name:'No scoring on first card'};
+    if(cardIdx === 1) return {idx: t.pairToGroup, name: state.groupNames[t.pairToGroup]};
+    if(cardIdx === 2) return {idx: t.tripToGroup, name: state.groupNames[t.tripToGroup]};
+    return {idx: t.quadToGroup, name: state.groupNames[t.quadToGroup]};
+  }
+
+
   function render(){
     if(!state.setupDone){ mountSetup(); return; }
 
@@ -581,7 +592,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
     // Turn info
     const tIdx = state.currentTeam, cIdx = state.currentCard;
-    turnWho.textContent = `Team ${tIdx+1}`; turnCard.textContent = `Card ${cIdx+1} / 4`;
+    turnWho.textContent = `Now creating Team ${tIdx+1}`; turnCard.textContent = `Card ${cIdx+1} / 4`;
+    if (turnPrompt){
+      if(cIdx===0){ turnPrompt.textContent = `${state.groupNames[tIdx%2]} (no points this card), pick a card`; }
+      else { turnPrompt.textContent = `${state.groupNames[tIdx%2]}, pick a card`; }
+    }
 
     // Inputs (name + 4 skills)
     inputs.innerHTML='';
@@ -660,11 +675,12 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     const percent = (points/cfg.max)*100;
     const sub = percent===100?'Perfect balance!': percent>=85?'Excellent balance — very close to target.': percent>=70?'Good — some room to optimize.': percent>=50?'Fair — consider rebalancing.':'Needs work — far from target.';
-    return {title:`${cfg.name} — ${Math.round(percent)}%`, sub, percent, lines};
+    const award = (lockedCardIdx===1)? state.groupNames[state.teams[teamIdx].pairToGroup] : (lockedCardIdx===2? state.groupNames[state.teams[teamIdx].tripToGroup] : state.groupNames[state.teams[teamIdx].quadToGroup]);
+    return {title:`${cfg.name} — ${Math.round(percent)}%`, sub, percent, lines, awardTo: award};
   }
   function showFeedback(info){
     fbHeader.textContent = info.title;
-    fbSub.textContent = info.sub || '';
+    fbSub.textContent = (info.sub ? info.sub + ' · ' : '') + (info.awardTo ? ('Points → ' + info.awardTo) : '');
     fbList.innerHTML = '';
     info.lines.forEach(l=>{
       const li=document.createElement('li'); li.className='li';
