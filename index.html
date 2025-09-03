@@ -1068,6 +1068,45 @@
   });
   $("#restart").addEventListener("click", ()=>{ if(confirm("This clears storage and reloads.")){ localStorage.removeItem(LSKEY); location.reload(); } });
 
+
+  // --- Debug helper: Ctrl+Q fills current card with dummy data ---
+document.addEventListener("keydown", (e)=>{
+  if(e.ctrlKey && e.key.toLowerCase()==="q"){
+    e.preventDefault();
+    const ti = S.currentTeam, ci = S.currentCard;
+    const t = S.teams[ti];
+
+    // Random debug name
+    const rnd = Math.floor(Math.random()*1000);
+    t.names[ci] = "Debug_" + rnd;
+    const nameEl = $("#studentName");
+    if(nameEl) nameEl.value = t.names[ci];
+
+    // All skills = 5
+    t.cards[ci] = [5,5,5,5];
+    $$("#skillInputs input").forEach((inp,idx)=>{
+      inp.value = 5;
+    });
+
+    // Random interest if active
+    if(curatedActive()){
+      const items = S.curated.filter(x=>x && x.trim());
+      if(items.length>=2){
+        const pick = items[Math.floor(Math.random()*items.length)];
+        t.interests[ci] = pick;
+        const sel = $("#interestSelect");
+        if(sel){
+          sel.value = pick;
+        }
+      }
+    }
+
+    save();
+    updateSumLine(ti,ci);
+    console.log("Debug fill applied to Team",ti+1,"Card",ci+1);
+  }
+});
+ 
   // Kick off
   render();
 })();
