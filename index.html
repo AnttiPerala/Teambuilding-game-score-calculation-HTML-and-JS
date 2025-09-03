@@ -55,7 +55,6 @@
   input:focus, select:focus{outline:none;border-color:#264966;box-shadow:0 0 0 2px rgba(96,165,250,.25)}
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
-  /* Buttons: default muted, only .primary stands out */
   .btn{
     appearance:none;border:1px solid #152032;
     background:linear-gradient(180deg,#0b1118,#0a0f15);
@@ -72,14 +71,7 @@
     opacity:1
   }
   .btn.danger{border-color:#3a1a1a;background:linear-gradient(180deg,#160d0f,#10090b);color:#f2caca}
-
-  /* Greyed disabled buttons (incl. Lock card when unusable) */
-  .btn[disabled]{
-    opacity:.45 !important;
-    cursor:not-allowed !important;
-    filter:grayscale(0.2);
-    box-shadow:none !important;
-  }
+  .btn[disabled]{opacity:.45!important;cursor:not-allowed!important;filter:grayscale(.2);box-shadow:none!important}
 
   .hint{font-size:.95rem;color:var(--muted)}
   .sumline{font-weight:650}
@@ -178,7 +170,7 @@
               </div>
             </div>
 
-            <!-- NEW: Interest bonus list -->
+            <!-- Interest bonus list -->
             <div style="grid-column:1/-1">
               <label>Interest bonus items (2–10, optional)</label>
               <div class="hint">If at least 2 are filled, each card can pick one. Matching a previous card <strong>in the same team</strong> gives +10 points.</div>
@@ -223,7 +215,7 @@
             <div class="grid cols-2" id="skillInputs"></div>
           </div>
 
-          <!-- NEW: interest selector (shown only if curated list has >=2 items) -->
+          <!-- interest selector -->
           <div id="interestRow" class="row hidden">
             <label for="interestSelect">Interest</label>
             <select id="interestSelect" aria-label="Interest selection for this card"></select>
@@ -253,7 +245,6 @@
         <div class="row" style="margin-top:10px;gap:14px;flex-wrap:wrap">
           <div class="chip" id="finalScore1">Group 1: 0</div>
           <div class="chip" id="finalScore2">Group 2: 0</div>
-          <div class="chip" id="winnerChip">Winner: —</div>
         </div>
         <div class="row" style="margin-top:12px;justify-content:flex-end;gap:10px">
           <button class="btn" id="toIntake">Add remaining cards</button>
@@ -323,9 +314,6 @@
               <button class="btn" id="drawerSave">Save settings</button>
             </div>
           </div>
-
-          <!-- Ownership editor removed -->
-
         </div>
       </div>
     </div>
@@ -351,16 +339,16 @@
 <script>
 (function(){
   "use strict";
-  const LSKEY = "tbcg_state_v3"; // bumped for new fields
+  const LSKEY = "tbcg_state_v4"; // bumped for dynamic team-count
 
   // -------- State / Model --------
   function defaultTeam(i, teamSize){
-    const pairToGroup = (i % 2 === 0) ? 1 : 0;   // default alternating ownership (not editable)
+    const pairToGroup = (i % 2 === 0) ? 1 : 0;
     const tripToGroup = 1 - pairToGroup;
     const quadToGroup = pairToGroup;
     const cards = Array.from({length:teamSize}, ()=>[0,0,0,0]);
     const names = Array.from({length:teamSize}, ()=>"");
-    const interests = Array.from({length:teamSize}, ()=>""); // NEW per-slot selection
+    const interests = Array.from({length:teamSize}, ()=>"");
     const locked = Array.from({length:teamSize}, ()=>false);
     return {cards, names, interests, locked, extras:[], pairToGroup, tripToGroup, quadToGroup};
   }
@@ -374,7 +362,7 @@
       normalize:true,
       groupNames:["Group 1","Group 2"],
       remainderMode:"distribute",
-      curated:[], // NEW: interest list
+      curated:[],
       currentTeam:0,
       currentCard:0,
       scoringEnded:false,
@@ -385,24 +373,19 @@
     };
   }
   let S = load();
+
   function safeMigrate(state){
-    // Ensure new fields exist
     if(!Array.isArray(state.curated)) state.curated=[];
     const ts = Math.max(2, Math.min(8, state.teamSize || 4));
     (state.teams||[]).forEach((t,idx)=>{
       if(!Array.isArray(t.interests)) t.interests = Array.from({length:ts}, ()=>"");
-      // ensure lengths
       t.cards = (t.cards||[]).slice(0,ts); while(t.cards.length<ts) t.cards.push([0,0,0,0]);
       t.names = (t.names||[]).slice(0,ts); while(t.names.length<ts) t.names.push("");
       t.locked=(t.locked||[]).slice(0,ts); while(t.locked.length<ts) t.locked.push(false);
       t.interests=(t.interests||[]).slice(0,ts); while(t.interests.length<ts) t.interests.push("");
-      // extras may carry interest now
       if(Array.isArray(t.extras)){
         t.extras = t.extras.map(ex=>({name:ex.name||"", values:Array.isArray(ex.values)?ex.values:[0,0,0,0], interest:(ex.interest||"")}));
-      } else {
-        t.extras=[];
-      }
-      // defaults for ownership if missing
+      } else { t.extras=[]; }
       if(typeof t.pairToGroup!=="number"){ t.pairToGroup=(idx%2===0)?1:0; }
       if(typeof t.tripToGroup!=="number"){ t.tripToGroup=1-t.pairToGroup; }
       if(typeof t.quadToGroup!=="number"){ t.quadToGroup=t.pairToGroup; }
@@ -411,11 +394,6 @@
   }
   function load(){
     try{ const raw = localStorage.getItem(LSKEY); if(raw){ return safeMigrate(JSON.parse(raw)); } }catch(e){}
-    // Try migrating from v2 if present
-    try{
-      const raw2 = localStorage.getItem("tbcg_state_v2");
-      if(raw2){ const old = JSON.parse(raw2); const migrated = safeMigrate(old); localStorage.setItem(LSKEY, JSON.stringify(migrated)); return migrated; }
-    }catch(e){}
     return defaultState();
   }
   function save(){ localStorage.setItem(LSKEY, JSON.stringify(S)); }
@@ -427,6 +405,26 @@
   function clamp(v,min,max){ return Math.max(min, Math.min(max,v)); }
   function sum(a){ return a.reduce((x,y)=>x+y,0); }
   function getTeamSize(){ return Math.max(2, Math.min(8, S.teamSize||4)); }
+
+  // how many full scoring teams should exist (even number)
+  function plannedBaseTeams(){
+    const TS = getTeamSize();
+    if(!S.participants || S.participants<=0){
+      return Math.max(2, S.teams.length); // free play, keep at least current
+    }
+    const maxFull = Math.floor(S.participants / TS);
+    const even = Math.floor(maxFull/2)*2;
+    return Math.max(2, even);
+  }
+
+  function ensureBaseTeams(){
+    const need = plannedBaseTeams();
+    const TS = getTeamSize();
+    while(S.teams.length < need){
+      S.teams.push(defaultTeam(S.teams.length, TS));
+    }
+  }
+
   function ensureTeamSizes(){
     const ts = getTeamSize();
     S.teams.forEach((t,idx)=>{
@@ -441,14 +439,13 @@
       }
     });
   }
+
   function cardEntered(ti,ci){
     const t=S.teams[ti]; const vals=(t.cards[ci]||[0,0,0,0]); const name=(t.names[ci]||"").trim();
     if(t.locked[ci]===true) return true; if(name) return true; return vals.some(v=>v>0);
   }
-  function totalEnteredCards(){ let c=0; for(let ti=0;ti<S.teams.length;ti++){ for(let ci=0;ci<getTeamSize();ci++){ if(cardEntered(ti,ci)) c++; } } return c; }
-  function countLockedSlots(team, TS){ let c=0; for(let i=0;i<TS;i++){ if(team.locked[i]) c++; } return c; }
+  function totalEnteredCards(){ let c=0; const TS=getTeamSize(); for(let ti=0;ti<S.teams.length;ti++){ for(let ci=0;ci<TS;ci++){ if(cardEntered(ti,ci)) c++; } } return c; }
 
-  // Helpers to hide empties in Final view
   function slotHasAnything(team, i){
     const vals = team.cards[i] || [0,0,0,0];
     const name = (team.names[i] || "").trim();
@@ -464,10 +461,9 @@
     return true;
   }
 
-  // auto-skip to next playable (unlocked) slot
   function advanceToNextPlayable() {
     const TS = getTeamSize();
-    for (let tries = 0; tries < 4 * TS; tries++) {
+    for (let tries = 0; tries < S.teams.length * TS; tries++) {
       const t = S.teams[S.currentTeam];
       if (!t.locked[S.currentCard]) return;
       if (S.currentCard < TS - 1) { S.currentCard++; }
@@ -475,50 +471,62 @@
     }
   }
 
-  // -------- Fairness guard (unchanged behaviour) --------
+  // -------- Fairness guard (now uses dynamic base team count) --------
   function fairnessCheckMaybe(){
     if(!S.participants || S.participants<=0) return;
+    ensureBaseTeams(); // may add teams in pairs as soon as participants/team size imply more
+
     const entered = totalEnteredCards();
     const remaining = Math.max(0, S.participants - entered);
     const TS = getTeamSize();
+    const BASE = plannedBaseTeams();
 
     function presentCountTeam(ti){
       let k=0; for(let ci=0;ci<TS;ci++){ if(cardEntered(ti,ci)) k++; } return k;
     }
+
+    // how many full teams are complete
+    let completed = 0;
+    for(let j=0;j<BASE;j++){ if(presentCountTeam(j) >= TS) completed++; }
+
+    // if all planned teams complete:
+    if(completed >= BASE){
+      // If enough cards exist to fairly add 2 more full teams, extend and continue
+      if(remaining >= TS*2){
+        // extend by two teams
+        S.teams.push(defaultTeam(S.teams.length, TS));
+        S.teams.push(defaultTeam(S.teams.length, TS));
+        save();
+        return;
+      }
+      // otherwise we are done scoring
+      S.scoringEnded = true;
+      S.endWhy = "All teams completed.";
+      save(); showSection("end"); return;
+    }
+
+    // Otherwise, normal guard: don't stop mid-stage if we can still hit next milestone
     const ti = S.currentTeam;
     const k = presentCountTeam(ti);
+    // need to reach next scoring milestone for current team
+    let need;
+    if (k <= 0) need = 2;           // need baseline+pair
+    else if (k < TS) need = 1;      // next card reaches next stage
+    else need = 2;                  // conservative: avoid stopping exactly between teams
 
-    if(k>0 && k<TS) return;
-
-    if(k===0){
-      let completed = 0;
-      for(let j=0;j<4;j++){ if(presentCountTeam(j) >= TS) completed++; }
-
-      const teamsRemaining = 4 - completed;
-      const T = Math.min(teamsRemaining, Math.floor(remaining / TS));
-
-      if(T <= 0){
-        S.scoringEnded = true;
-        S.endWhy = "Fairness: no full teams can be completed with remaining cards.";
-        save(); showSection("end"); return;
-      }
-      if(T === 1 && (completed % 2 === 0)){
-        S.scoringEnded = true;
-        S.endWhy = `Fairness: completing one more full team would make totals uneven (${completed + 1}). Stopping now keeps both groups with equal scoring rounds.`;
-        save(); showSection("end"); return;
-      }
+    if (remaining < need){
+      S.scoringEnded = true;
+      S.endWhy = `Fairness: only ${remaining} cards left, but ${need} needed to reach the next scoring stage for the current team.`;
+      save(); showSection("end"); return;
     }
   }
 
   // -------- Scoring math --------
-  function ownerForStage(team, stageIndex){
-    if(stageIndex % 2 === 0) return team.pairToGroup;
-    return 1 - team.pairToGroup;
-  }
+  function ownerForStage(team, stageIndex){ return (stageIndex % 2 === 0) ? team.pairToGroup : (1 - team.pairToGroup); }
   function stageTargetForCardIndex(idx){
     const stageIndex = idx + 1;
     if(stageIndex < 2) return {stage:"baseline", target:0, max:0, stageIndex};
-    const target = 5 * stageIndex;   // 10, 15, 20, ...
+    const target = 5 * stageIndex;
     const max = 4 * target;
     const name = stageIndex===2 ? "pair" : (stageIndex===3 ? "triplet" : `stage${stageIndex}`);
     return {stage:name, target, max, stageIndex};
@@ -548,7 +556,8 @@
   }
   function allTeamsComplete(){
     const TS=getTeamSize();
-    return S.teams.slice(0,4).every(t => t.locked.slice(0,TS).filter(Boolean).length===TS);
+    const BASE = plannedBaseTeams();
+    return S.teams.slice(0,BASE).every(t => t.locked.slice(0,TS).filter(Boolean).length===TS);
   }
   function skillNames(){ return (S.skills && S.skills.length===4) ? S.skills : ["Skill 1","Skill 2","Skill 3","Skill 4"]; }
   function curatedActive(){ return Array.isArray(S.curated) && S.curated.filter(x=>x && x.trim()).length>=2; }
@@ -606,7 +615,6 @@
     sel.disabled=!!t.locked[ci];
     sel.onchange=()=>{ t.interests[ci]=sel.value; save(); };
   }
-  // Lock button state + tooltip
   function updateSumLine(ti,ci){
     const t=S.teams[ti];
     const s=sum(t.cards[ci]);
@@ -629,6 +637,7 @@
   }
   function renderPlay(){
     ensureTeamSizes();
+    ensureBaseTeams();
     advanceToNextPlayable();
 
     const TS = getTeamSize();
@@ -641,7 +650,7 @@
     const nameEl=$("#studentName"); nameEl.value=t.names[ci]||""; nameEl.disabled=!!t.locked[ci];
     nameEl.oninput=(e)=>{ t.names[ci]=(e.target.value||"").slice(0,120); updateSumLine(ti,ci); save(); };
     rebuildSkillInputs(ti,ci);
-    rebuildInterestSelect(ti,ci); // NEW
+    rebuildInterestSelect(ti,ci);
     updateSumLine(ti,ci);
     $("#backCard").disabled=(ci===0);
   }
@@ -649,15 +658,12 @@
     $("#endReason").textContent=S.endWhy || "All teams completed.";
     $("#finalScore1").textContent=`${S.groupNames[0]}: ${S.totals[0]}`;
     $("#finalScore2").textContent=`${S.groupNames[1]}: ${S.totals[1]}`;
-    const w = S.totals[0]===S.totals[1] ? "Tie" : (S.totals[0]>S.totals[1]?S.groupNames[0]:S.groupNames[1]);
-    $("#winnerChip").textContent=`Winner: ${w}`;
   }
   function renderFinal(){
     const wrap=$("#finalList"); wrap.innerHTML="";
     const TS=getTeamSize();
     S.teams.forEach((t,i)=>{
-      if (teamIsEmpty(t)) return;  // hide empty teams
-
+      if (teamIsEmpty(t)) return;
       const card=document.createElement("div"); card.className="team-card";
       const title=document.createElement("div"); title.className="team-title"; title.textContent=`Team ${i+1}`; card.appendChild(title);
       const ul=document.createElement("ul"); ul.style.margin="0"; ul.style.paddingLeft="18px";
@@ -686,18 +692,16 @@
   }
   function render(){
     ensureTeamSizes();
+    ensureBaseTeams();
     if(!S.setupDone){
       $("#skill0").value=S.skills[0]; $("#skill1").value=S.skills[1]; $("#skill2").value=S.skills[2]; $("#skill3").value=S.skills[3];
       $("#participants").value=S.participants||""; $("#gname0").value=S.groupNames[0]; $("#gname1").value=S.groupNames[1];
       $("#teamSize").value=S.teamSize||4; $("#normalize").checked=!!S.normalize;
       $$("input[name='remainderMode']").forEach(r=>r.checked=(r.value===S.remainderMode));
-
-      // hydrate interest inputs
       const box = $("#interestInputs");
       const ins = Array.from(box.querySelectorAll("input[type='text']"));
       const cur = (S.curated||[]);
       ins.forEach((el,idx)=>{ el.value = cur[idx] || ""; });
-
       showSection("setup");
     }else if(S.scoringEnded || allTeamsComplete()){
       if(allTeamsComplete() && !S.scoringEnded){ S.endWhy="All teams completed."; save(); }
@@ -719,8 +723,6 @@
     const ts=clamp(parseInt($("#teamSize").value||"4",10)||4,2,8);
     const norm = $("#normalize").checked;
     const rem=($$("input[name='remainderMode']").find(r=>r.checked)||{value:"distribute"}).value;
-
-    // collect curated interests
     const items = Array.from($("#interestInputs").querySelectorAll("input[type='text']"))
       .map(i=> (i.value||"").trim())
       .filter(Boolean)
@@ -729,6 +731,7 @@
     S.skills=sk; S.participants=part; S.groupNames=[g0,g1]; S.teamSize=ts; S.normalize=!!norm; S.remainderMode=(rem==="ownTeam"?"ownTeam":"distribute");
     S.curated=items;
     S.teams=[defaultTeam(0,ts),defaultTeam(1,ts),defaultTeam(2,ts),defaultTeam(3,ts)];
+    ensureBaseTeams();
     S.currentTeam=0; S.currentCard=0; S.totals=[0,0]; S.scoringEnded=false; S.endWhy=""; S.lastLock=null;
     S.setupDone=true; save(); render();
   });
@@ -753,6 +756,7 @@
     }
     S.remainderMode=$("#dremainder").value==="ownTeam"?"ownTeam":"distribute";
     S.skills=[$("#dskill0").value||"Visual", $("#dskill1").value||"Sound", $("#dskill2").value||"Programming", $("#dskill3").value||"Project Management"];
+    ensureBaseTeams();
     save(); render();
   });
 
@@ -762,6 +766,8 @@
   $("#resetBtn").addEventListener("click", ()=>{ if(confirm("Clear all data and restart?")) resetAll(); });
 
   // Lock → score + feedback (+ interest bonus)
+  function curatedActive(){ return Array.isArray(S.curated) && S.curated.filter(x=>x && x.trim()).length>=2; }
+
   $("#lockBtn").addEventListener("click", ()=>{
     const TS=getTeamSize();
     const ti=S.currentTeam, ci=S.currentCard, t=S.teams[ti];
@@ -773,14 +779,12 @@
     let title="", ownerText="", percent=0, items=[];
     let bonusApplied = 0;
 
-    // Compute interest match bonus (within team, match any earlier slot)
+    // Interest match bonus (match any earlier card in the same team)
     if(curatedActive()){
       const my = (t.interests && t.interests[ci] || "").trim();
       if(my && ci>0){
         for(let j=0;j<ci;j++){
-          if((t.interests && t.interests[j]||"").trim() === my){
-            bonusApplied = 10; break;
-          }
+          if((t.interests && t.interests[j]||"").trim() === my){ bonusApplied = 10; break; }
         }
       }
     }
@@ -804,15 +808,12 @@
       title=`${label} score — ${S.normalize?add:r.pts} / ${maxLabel} (${percent}%)${bonusApplied?`  +${bonusApplied} bonus`:``}`;
       ownerText=`Points → ${S.groupNames[owner]}`;
       items=r.perSkill.map((ps,idx)=>{ const nm=skillNames()[idx]; const d=ps.delta; if(d===0) return {text:`${nm}: On target`, cls:"sum-ok"}; if(d>0) return {text:`${nm}: +${d} over`, cls:"sum-over"}; return {text:`${nm}: ${d} under`, cls:"sum-under"}; });
-      if(bonusApplied){
-        items.unshift({text:`Interest match bonus +${bonusApplied}`, cls:"sum-ok"});
-      }
+      if(bonusApplied){ items.unshift({text:`Interest match bonus +${bonusApplied}`, cls:"sum-ok"}); }
       S.lastLock={team:ti,card:ci,stage,owner,points:totalAdd,bonus:bonusApplied,values:[].concat(t.cards[ci]), interest:(t.interests&&t.interests[ci])||""};
     }
     save(); showOverlay(title, ownerText, percent, items);
   });
 
-  // Overlay
   function showOverlay(title, ownerText, percent, items){
     $("#overlayTitle").textContent=title; $("#overlayOwner").textContent=ownerText;
     $("#overlayPB").style.width=percent+"%";
@@ -829,26 +830,11 @@
   $("#overlayClose").addEventListener("click", ()=>{
     const TS=getTeamSize();
     $("#overlay").classList.remove("show");
-
-    // Move pointer forward
-    if(S.currentCard<TS-1){ 
-      S.currentCard++; 
-    } else { 
-      S.currentCard=0; 
-      S.currentTeam=(S.currentTeam+1)%S.teams.length; 
-    }
-    // skip any locked slots we might land on
+    if(S.currentCard<TS-1){ S.currentCard++; } else { S.currentCard=0; S.currentTeam=(S.currentTeam+1)%S.teams.length; }
     advanceToNextPlayable();
-
     save();
-    if(allTeamsComplete()){ 
-      S.endWhy="All teams completed."; 
-      S.scoringEnded=true; 
-      save(); 
-      showSection("end"); 
-    } else { 
-      render(); 
-    }
+    if(allTeamsComplete()){ S.endWhy="All teams completed."; S.scoringEnded=true; save(); showSection("end"); }
+    else { render(); }
   });
   $("#overlayUndo").addEventListener("click", ()=>{
     const last=S.lastLock; if(!last){ alert("Nothing to undo."); return; }
@@ -878,8 +864,6 @@
       const n=document.createElement("input");
       n.type="number"; n.min="0"; n.max="20"; n.step="1"; n.placeholder=skillNames()[i]; n.style.width="80px"; inputs.push(n);
     }
-
-    // interest dropdown in intake if curated enabled
     let sel = null;
     if(curatedActive()){
       sel=document.createElement("select");
@@ -887,7 +871,6 @@
       const opt0=document.createElement("option"); opt0.value=""; opt0.textContent="— interest —"; sel.appendChild(opt0);
       items.forEach(it=>{ const o=document.createElement("option"); o.value=it; o.textContent=it; sel.appendChild(o); });
     }
-
     const sumTag=document.createElement("span"); sumTag.className="tag"; sumTag.textContent="Sum: 0/20";
     function update(){
       const s=inputs.reduce((a,b)=>a+(parseInt(b.value||"0",10)||0),0);
@@ -901,7 +884,6 @@
   }
   $("#addRow").addEventListener("click", addIntakeRow);
 
-  // Auto-assign remaining cards (uses original scoring helpers; keeps interest where possible)
   $("#assignAuto").addEventListener("click", ()=>{
     const rows=Array.from($("#intakeRows").children); const cards=[];
     rows.forEach(r=>{
@@ -947,7 +929,8 @@
 
     const pool=cards.slice();
     const TS=getTeamSize();
-    const baseTeams=S.teams.slice(0,4);
+    const BASE = plannedBaseTeams();
+    const baseTeams=S.teams.slice(0,BASE);
     const eligibleTeams=(S.remainderMode==="distribute") ? baseTeams.filter(t=>presentCountForTeamIndex(t)>0) : baseTeams;
 
     // Pass 1: Fill to base size by maximizing immediate stage gain
@@ -976,7 +959,7 @@
     const leftovers=pool.slice();
     if(leftovers.length){
       if(S.remainderMode==="ownTeam"){
-        let overflow=S.teams[4]; if(!overflow){ overflow=defaultTeam(4,TS); S.teams.push(overflow); }
+        let overflow=S.teams[BASE]; if(!overflow){ overflow=defaultTeam(BASE,TS); S.teams.push(overflow); }
         for(const c of leftovers.splice(0,TS)){
           for(let i=0;i<TS;i++){
             if(sum(overflow.cards[i])===0 && !overflow.names[i]){
@@ -993,11 +976,11 @@
           for(let k=0;k<4;k++) base[k]+=cand.values[k];
           let pts=0; for(let k=0;k<4;k++){ const d=Math.abs(target-base[k]); pts+=target-d; } return pts;
         }
-        let given=[0,0,0,0];
-        for(let round=0; round<4 && leftovers.length; round++){
+        const given = new Array(BASE).fill(0);
+        for(let round=0; round<BASE && leftovers.length; round++){
           let bestTeam=-1, bestScore=-Infinity;
-          for(let ti=0; ti<4; ti++){
-            if(given[ti] >= 1) continue;
+          for(let ti=0; ti<BASE; ti++){
+            if(given[ti] >= 1) continue; // at most 1 extra per team in distribute mode
             const sc = extraScore(S.teams[ti], leftovers[0]);
             if(sc > bestScore){ bestScore=sc; bestTeam=ti; }
           }
@@ -1005,14 +988,11 @@
             const pick = leftovers.shift();
             (S.teams[bestTeam].extras ||= []).push({name:pick.name, values:pick.values, interest:pick.interest||""});
             given[bestTeam]++;
-          }
+          } else break;
         }
         while(leftovers.length){
-          let overflow = S.teams.find((t,idx)=> idx>=4 && (t.locked?.slice(0,TS).filter(Boolean).length||0) < TS);
-          if(!overflow){
-            overflow = defaultTeam(S.teams.length, TS);
-            S.teams.push(overflow);
-          }
+          let overflow = S.teams.find((t,idx)=> idx>=BASE && (t.locked?.slice(0,TS).filter(Boolean).length||0) < TS);
+          if(!overflow){ overflow = defaultTeam(S.teams.length, TS); S.teams.push(overflow); }
           for(let i=0;i<TS && leftovers.length;i++){
             if(sum(overflow.cards[i])===0 && !overflow.names[i]){
               const c = leftovers.shift();
@@ -1039,7 +1019,7 @@
   }
   $("#exportCSV").addEventListener("click", ()=>{
     const TS=getTeamSize();
-    const rows=[["Team","Slot","Name"].concat(skillNames()).concat(["Interest"])]; // NEW Interest column
+    const rows=[["Team","Slot","Name"].concat(skillNames()).concat(["Interest"])];
     S.teams.forEach((t,i)=>{
       for(let k=0;k<TS;k++){ rows.push([`Team ${i+1}`, String(k+1), t.names[k]||"", ...(t.cards[k]||[0,0,0,0]), (t.interests&&t.interests[k])||""]); }
       if(t.extras && t.extras.length){ t.extras.forEach((ex,idx)=>{ rows.push([`Team ${i+1}`, String(TS+idx+1), ex.name||"", ...(ex.values||[0,0,0,0]), ex.interest||""]); }); }
@@ -1056,11 +1036,7 @@
       remainderMode:S.remainderMode,
       curated:S.curated,
       teams:S.teams.map(t=>({
-        cards:t.cards,
-        names:t.names,
-        interests:t.interests,
-        locked:t.locked,
-        extras:(t.extras||[]),
+        cards:t.cards, names:t.names, interests:t.interests, locked:t.locked, extras:(t.extras||[]),
         pairToGroup:t.pairToGroup, tripToGroup:t.tripToGroup, quadToGroup:t.quadToGroup
       }))
     };
@@ -1068,45 +1044,28 @@
   });
   $("#restart").addEventListener("click", ()=>{ if(confirm("This clears storage and reloads.")){ localStorage.removeItem(LSKEY); location.reload(); } });
 
-
   // --- Debug helper: Ctrl+Q fills current card with dummy data ---
-document.addEventListener("keydown", (e)=>{
-  if(e.ctrlKey && e.key.toLowerCase()==="q"){
-    e.preventDefault();
-    const ti = S.currentTeam, ci = S.currentCard;
-    const t = S.teams[ti];
-
-    // Random debug name
-    const rnd = Math.floor(Math.random()*1000);
-    t.names[ci] = "Debug_" + rnd;
-    const nameEl = $("#studentName");
-    if(nameEl) nameEl.value = t.names[ci];
-
-    // All skills = 5
-    t.cards[ci] = [5,5,5,5];
-    $$("#skillInputs input").forEach((inp,idx)=>{
-      inp.value = 5;
-    });
-
-    // Random interest if active
-    if(curatedActive()){
-      const items = S.curated.filter(x=>x && x.trim());
-      if(items.length>=2){
-        const pick = items[Math.floor(Math.random()*items.length)];
-        t.interests[ci] = pick;
-        const sel = $("#interestSelect");
-        if(sel){
-          sel.value = pick;
+  document.addEventListener("keydown", (e)=>{
+    if(e.ctrlKey && e.key.toLowerCase()==="q"){
+      e.preventDefault();
+      const ti = S.currentTeam, ci = S.currentCard;
+      const t = S.teams[ti];
+      const rnd = Math.floor(Math.random()*1000);
+      t.names[ci] = "Debug_" + rnd;
+      const nameEl = $("#studentName"); if(nameEl) nameEl.value = t.names[ci];
+      t.cards[ci] = [5,5,5,5];
+      $$("#skillInputs input").forEach(inp=>{ inp.value = 5; });
+      if(curatedActive()){
+        const items = S.curated.filter(x=>x && x.trim());
+        if(items.length>=2){
+          const pick = items[Math.floor(Math.random()*items.length)];
+          t.interests[ci] = pick; const sel = $("#interestSelect"); if(sel) sel.value = pick;
         }
       }
+      save(); updateSumLine(ti,ci);
     }
+  });
 
-    save();
-    updateSumLine(ti,ci);
-    console.log("Debug fill applied to Team",ti+1,"Card",ci+1);
-  }
-});
- 
   // Kick off
   render();
 })();
