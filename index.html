@@ -276,10 +276,11 @@
               Set Participants and Team size to see a planning hint…
             </div>
 
-            <div class="row" style="margin-top:12px;justify-content:space-between">
+            <div class="row" style="margin-top:12px;justify-content:space-between;gap:10px;flex-wrap:wrap">
               <span class="hint">Press <strong>Start</strong> to begin (you can still tweak later).</span>
-              <div>
+              <div class="row" style="gap:8px">
                 <button class="btn" type="button" id="drawerSave">Save</button>
+                <button class="btn" type="button" id="drawerResetPlayed">Reset played cards</button>
                 <button class="btn primary" type="button" id="drawerStart">Start</button>
               </div>
             </div>
@@ -310,9 +311,9 @@
 <script>
 (function(){
   "use strict";
-  const LSKEY = "tbcg_state_v12"; // start reliability
+  const LSKEY = "tbcg_state_v13"; // reset played cards feature
 
-  // Basic error visibility
+  // ---- Helpers / state ----
   window.addEventListener("error", (e)=>{ console.error("App error:", e.message, e.error); });
 
   function defaultTeam(i, teamSize){
@@ -362,10 +363,14 @@
       if(!Array.isArray(t.extras)) t.extras=[];
       if(typeof t.pairToGroup!=="number"){ t.pairToGroup=(idx%2===0)?1:0; t.tripToGroup=1-t.pairToGroup; t.quadToGroup=t.pairToGroup; }
     });
+    if(typeof state.currentTeam!=="number") state.currentTeam=0;
+    if(typeof state.currentCard!=="number") state.currentCard=0;
+    if(!Array.isArray(state.totals)) state.totals=[0,0];
     return state;
   }
   function save(){ localStorage.setItem(LSKEY, JSON.stringify(S)); }
 
+  // ---- utilities ----
   const $=s=>document.querySelector(s);
   const $$=s=>Array.from(document.querySelectorAll(s));
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
@@ -374,6 +379,7 @@
   const curatedActive=()=> Array.isArray(S.curated) && S.curated.filter(x=>x && x.trim()).length>=2;
   function getTeamSize(){ return Math.max(2, Math.min(8, S.teamSize||4)); }
 
+  // ---- fairness & planning ----
   function plannedBaseTeams(){
     const TS = getTeamSize();
     if(!S.participants || S.participants<=0) return Math.max(2,S.teams.length);
@@ -424,6 +430,7 @@
     }
   }
 
+  // ---- scoring ----
   function stageTargetForCardIndex(idx){
     const stageIndex=idx+1; if(stageIndex<2) return {stage:"baseline",target:0,max:0,stageIndex};
     const target=5*stageIndex; const max=4*target;
@@ -435,6 +442,7 @@
   function pickerIndexFor(ti,ci){ const team=S.teams[ti]; const starter=1-team.pairToGroup; return (ci%2===0)?starter:(1-starter); }
   function allTeamsComplete(){ const TS=getTeamSize(); const BASE=plannedBaseTeams(); return S.teams.slice(0,BASE).every(t=> t.locked.slice(0,TS).filter(Boolean).length===TS ); }
 
+  // ---- timer ----
   let timerId=null, timerRemaining=0;
   function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
   function formatMMSS(sec){sec=Math.max(0,Math.floor(sec||0)); const m=Math.floor(sec/60),s=sec%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
@@ -446,6 +454,7 @@
     timerId=setInterval(()=>{ timerRemaining--; chip.textContent=formatMMSS(timerRemaining); if(timerRemaining<=0){ chip.classList.add("expired"); stopTimer(); } },1000);
   }
 
+  // ---- render helpers ----
   function renderHeader(){
     $("#score1").textContent=`${S.groupNames[0]}: ${S.totals[0]}`;
     $("#score2").textContent=`${S.groupNames[1]}: ${S.totals[1]}`;
@@ -533,6 +542,7 @@
     if(which==="final"){ stopTimer(); renderFinal(); }
   }
 
+  // ---- planning hint ----
   function planningSummary(p, ts){
     if(!(p>0 && ts>=2)) return "Set Participants and Team size to see a planning hint…";
     const stagesPerTeam = ts - 1;
@@ -557,6 +567,52 @@
     $("#planningHint").textContent = planningSummary(p, ts);
   }
 
+  // ---- Apply settings / start / reset-played ----
+  function applyDrawerToState(copyCurated){
+    const ts = clamp(parseInt($("#dteamSize").value||"4",10)||4,2,8);
+    S.groupNames=[($("#dgname0").value||"Group 1"), ($("#dgname1").value||"Group 2")];
+    S.participants=parseInt($("#dparticipants").value||"0",10)||0;
+    S.teamSize=ts; S.normalize=!!$("#dnormalize").checked;
+    S.remainderMode=$("#dremainder").value==="ownTeam"?"ownTeam":"distribute";
+    S.timerSeconds=Math.max(0, parseInt($("#dtimer").value||"0",10)||0);
+    S.skills=[($("#dskill0").value||"Visual"),($("#dskill1").value||"Sound"),($("#dskill2").value||"Programming"),($("#dskill3").value||"Project Management")];
+    if(copyCurated){
+      S.curated = Array.from($("#dInterestInputs").querySelectorAll("input[type='text']"))
+        .map(i=>(i.value||"").trim()).filter(Boolean).slice(0,10);
+    }
+    // adjust existing team arrays if already present
+    S.teams.forEach(t=>{
+      const old=t.cards.length; t.cards.length=ts; t.names.length=ts; t.locked.length=ts; (t.interests||(t.interests=[])).length=ts;
+      for(let k=old;k<ts;k++){ t.cards[k]=[0,0,0,0]; t.names[k]=""; t.locked[k]=false; t.interests[k]=""; }
+      if(S.currentCard>=ts) S.currentCard=ts-1;
+    });
+    ensureBaseTeams(); save(); updatePlanningHint();
+  }
+
+  function startGame(){
+    applyDrawerToState(true);
+    S.setupDone=true; S.scoringEnded=false; S.endWhy=""; S.lastLock=null;
+    S.currentTeam=0; S.currentCard=0; S.totals=[0,0];
+    S.teams=[defaultTeam(0,S.teamSize),defaultTeam(1,S.teamSize),defaultTeam(2,S.teamSize),defaultTeam(3,S.teamSize)];
+    ensureBaseTeams(); save();
+    $("#drawer").classList.remove("open");
+    showSection("play");
+  }
+
+  // NEW: reset only played cards/teams, keep settings intact
+  function resetPlayedCards(){
+    if(!confirm("Reset played cards and scores, but keep all settings?")) return;
+    const ts = getTeamSize();
+    S.totals=[0,0];
+    S.currentTeam=0; S.currentCard=0;
+    S.scoringEnded=false; S.endWhy="";
+    S.lastLock=null;
+    S.teams=[defaultTeam(0,ts),defaultTeam(1,ts),defaultTeam(2,ts),defaultTeam(3,ts)];
+    ensureBaseTeams(); save();
+    showSection("play");
+  }
+
+  // ---- Init render ----
   function render(){
     ensureBaseTeams();
     $("#dgname0").value=S.groupNames[0]; $("#dgname1").value=S.groupNames[1];
@@ -578,53 +634,15 @@
     }
   }
 
-  // Drawer toggle
+  // ---- wire UI ----
   $("#toggleDrawer").addEventListener("click", ()=>{
-    const d=$("#drawer");
-    d.classList.toggle("open");
+    const d=$("#drawer"); d.classList.toggle("open");
     $("#toggleDrawer").setAttribute("aria-expanded", d.classList.contains("open")?"true":"false");
   });
-
-  // Save current setup (no start)
   $("#drawerSave").addEventListener("click", ()=>applyDrawerToState(true));
-
-  // Start game (robust)
-  function startGame(){
-    try{
-      applyDrawerToState(true);
-      S.setupDone=true; S.scoringEnded=false; S.endWhy=""; S.lastLock=null;
-      S.currentTeam=0; S.currentCard=0; S.totals=[0,0];
-      S.teams=[defaultTeam(0,S.teamSize),defaultTeam(1,S.teamSize),defaultTeam(2,S.teamSize),defaultTeam(3,S.teamSize)];
-      ensureBaseTeams(); save();
-      $("#drawer").classList.remove("open");
-      showSection("play"); // explicit switch
-    }catch(err){
-      console.error("startGame failed:", err);
-      alert("Could not start due to an unexpected error. Check console for details.");
-    }
-  }
   $("#drawerStart").addEventListener("click", startGame);
-  $("#drawerStart").addEventListener("keydown", (e)=>{ if(e.key==="Enter" || e.key===" "){ e.preventDefault(); startGame(); } });
-
-  function applyDrawerToState(copyCurated){
-    const ts = clamp(parseInt($("#dteamSize").value||"4",10)||4,2,8);
-    S.groupNames=[($("#dgname0").value||"Group 1"), ($("#dgname1").value||"Group 2")];
-    S.participants=parseInt($("#dparticipants").value||"0",10)||0;
-    S.teamSize=ts; S.normalize=!!$("#dnormalize").checked;
-    S.remainderMode=$("#dremainder").value==="ownTeam"?"ownTeam":"distribute";
-    S.timerSeconds=Math.max(0, parseInt($("#dtimer").value||"0",10)||0);
-    S.skills=[($("#dskill0").value||"Visual"),($("#dskill1").value||"Sound"),($("#dskill2").value||"Programming"),($("#dskill3").value||"Project Management")];
-    if(copyCurated){
-      S.curated = Array.from($("#dInterestInputs").querySelectorAll("input[type='text']"))
-        .map(i=>(i.value||"").trim()).filter(Boolean).slice(0,10);
-    }
-    S.teams.forEach(t=>{
-      const old=t.cards.length; t.cards.length=ts; t.names.length=ts; t.locked.length=ts; (t.interests||(t.interests=[])).length=ts;
-      for(let k=old;k<ts;k++){ t.cards[k]=[0,0,0,0]; t.names[k]=""; t.locked[k]=false; t.interests[k]=""; }
-      if(S.currentCard>=ts) S.currentCard=ts-1;
-    });
-    ensureBaseTeams(); save(); updatePlanningHint();
-  }
+  $("#drawerStart").addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); startGame(); } });
+  $("#drawerResetPlayed").addEventListener("click", resetPlayedCards);
 
   $("#dparticipants").addEventListener("input", updatePlanningHint);
   $("#dteamSize").addEventListener("input", updatePlanningHint);
@@ -632,9 +650,8 @@
   $("#prevTeam").addEventListener("click", ()=>{ S.currentTeam=(S.currentTeam+S.teams.length-1)%S.teams.length; save(); render(); });
   $("#nextTeam").addEventListener("click", ()=>{ S.currentTeam=(S.currentTeam+1)%S.teams.length; save(); render(); });
   $("#backCard").addEventListener("click", ()=>{ if(S.currentCard>0){ S.currentCard--; save(); render(); } });
-  $("#resetBtn").addEventListener("click", ()=>{ if(confirm("Clear all data and restart?")){ localStorage.removeItem(LSKEY); location.reload(); } });
+  $("#resetBtn").addEventListener("click", ()=>{ if(confirm("Clear ALL data and restart?")){ localStorage.removeItem(LSKEY); location.reload(); } });
 
-  // Lock & scoring (+interest)
   $("#lockBtn").addEventListener("click", ()=>{
     const TS=getTeamSize(); const ti=S.currentTeam, ci=S.currentCard, t=S.teams[ti];
     if(t.locked[ci]) return; if(sum(t.cards[ci])!==20){ alert("Sum must be exactly 20."); return; }
@@ -753,11 +770,13 @@
     save(); showSection("final");
   });
 
+  // ---- exports & restart ----
   function download(filename,text,mime){ const blob=new Blob([text],{type:mime||"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },200); }
   $("#exportCSV").addEventListener("click", ()=>{ const TS=getTeamSize(); const rows=[["Team","Slot","Name"].concat(skillNames()).concat(["Interest"])]; S.teams.forEach((t,i)=>{ for(let k=0;k<TS;k++){ rows.push([`Team ${i+1}`, String(k+1), t.names[k]||"", ...(t.cards[k]||[0,0,0,0]), (t.interests&&t.interests[k])||""]); } if(t.extras && t.extras.length){ t.extras.forEach((ex,idx)=>{ rows.push([`Team ${i+1}`, String(TS+idx+1), ex.name||"", ...(ex.values||[0,0,0,0]), ex.interest||""]); }); } }); const csv=rows.map(r=>r.map(v=>String(v).includes(",")?`"${String(v).replace(/"/g,'""')}"`:String(v)).join(",")).join("\n"); download("teams.csv",csv,"text/csv"); });
   $("#exportJSON").addEventListener("click", ()=>{ const out={groupNames:S.groupNames, skills:S.skills, teamSize:getTeamSize(), normalize:S.normalize, remainderMode:S.remainderMode, curated:S.curated, timerSeconds:S.timerSeconds, teams:S.teams.map(t=>({cards:t.cards, names:t.names, interests:t.interests, locked:t.locked, extras:(t.extras||[]), pairToGroup:t.pairToGroup, tripToGroup:t.tripToGroup, quadToGroup:t.quadToGroup}))}; download("teams.json", JSON.stringify(out,null,2), "application/json"); });
   $("#restart").addEventListener("click", ()=>{ if(confirm("This clears storage and reloads.")){ localStorage.removeItem(LSKEY); location.reload(); } });
 
+  // ---- Ctrl+Q debug presets ----
   const SETUP_INTEREST_PRESET = ["Puzzle","Roguelike","RPG","Adventure","Sim / Management","Platformer","Metroidvania","Beat ’em Up","Fighting","Shoot ’em Up"];
   document.addEventListener("keydown",(e)=>{
     if(!(e.ctrlKey && e.key.toLowerCase()==="q")) return;
@@ -785,6 +804,7 @@
     save(); updateSumLine(ti,ci);
   });
 
+  // ---- boot ----
   render();
 })();
 </script>
