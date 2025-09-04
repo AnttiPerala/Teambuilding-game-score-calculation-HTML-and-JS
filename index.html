@@ -55,7 +55,7 @@
   input:focus, select:focus{outline:none;border-color:#264966;box-shadow:0 0 0 2px rgba(96,165,250,.25)}
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
-  /* Buttons: muted by default; only .primary stands out */
+  /* Buttons */
   .btn{
     appearance:none;border:1px solid #152032;
     background:linear-gradient(180deg,#0b1118,#0a0f15);
@@ -81,6 +81,7 @@
   .play-card{max-width:720px;margin:12px auto;gap:16px}
   .huge{font-size:1.6rem}
   .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#0b1118}
+
   .drawer{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:0 16px 16px}
   .drawer .inner{max-width:1100px;margin:0 auto;background:linear-gradient(180deg,#0f151e,#0b1017);border:1px solid var(--border);border-radius:16px}
   .drawer .bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border)}
@@ -88,17 +89,19 @@
   .drawer.open .content{display:block}
   .drawer .caret{transform:rotate(0);transition:transform .25s var(--bezier)}
   .drawer.open .caret{transform:rotate(180deg)}
+
   .overlay{position:fixed;inset:0;display:none;place-items:center;z-index:20;background:rgba(2,6,12,.55)}
   .overlay.show{display:grid}
   .modal{width:min(680px, calc(100vw - 32px));background:linear-gradient(180deg,#0f1724,#0b111a);border:1px solid var(--border);border-radius:16px;padding:16px}
   .pb{height:12px;background:#0a1018;border-radius:999px;border:1px solid var(--border);overflow:hidden}
   .pb>span{display:block;height:100%;width:0%;background:linear-gradient(90deg, rgba(34,211,238,.7), rgba(167,139,250,.7));transition:width .9s cubic-bezier(.2,.7,.2,1)}
+
   .team-card{padding:12px;border:1px solid var(--border);border-radius:14px;background:#0b1119}
   .team-title{font-weight:700;margin-bottom:6px}
 
-  /* Timer chip */
   .chip.timer{min-width:90px;justify-content:center}
   .chip.timer.expired{color:#fca5a5;border-color:#3b1d1d;background:linear-gradient(180deg,#160e11,#0e0a0c)}
+  .plan-hint{margin-top:8px;padding:8px 10px;border:1px dashed #24425f;background:#0a1119;border-radius:10px;color:#cfe1ff}
 </style>
 </head>
 <body>
@@ -126,83 +129,13 @@
 
   <main>
     <div class="container">
-
-      <!-- Setup -->
       <section id="setupSec" class="panel">
         <h2 style="margin:6px 0 10px">Setup</h2>
-        <div class="grid cols-2">
-          <div>
-            <label>Skills (4)</label>
-            <div class="grid cols-2">
-              <input type="text" id="skill0" placeholder="Visual" />
-              <input type="text" id="skill1" placeholder="Sound" />
-              <input type="text" id="skill2" placeholder="Programming" />
-              <input type="text" id="skill3" placeholder="Project Management" />
-            </div>
-          </div>
-          <div>
-            <label>Participants (optional)</label>
-            <input type="number" id="participants" min="0" step="1" placeholder="e.g., 20" />
-            <div class="hint">Used for progress + fairness guard</div>
-          </div>
-        </div>
-
-        <details style="margin-top:12px">
-          <summary class="hint">Optional settings</summary>
-          <div class="grid cols-2" style="margin-top:10px">
-            <div>
-              <label>Group 1 name</label>
-              <input type="text" id="gname0" placeholder="Group 1" />
-            </div>
-            <div>
-              <label>Group 2 name</label>
-              <input type="text" id="gname1" placeholder="Group 2" />
-            </div>
-            <div>
-              <label>Team size (2–8)</label>
-              <input type="number" id="teamSize" min="2" max="8" step="1" value="4" />
-              <div class="hint">How many cards per team (baseline is the 1st card).</div>
-            </div>
-            <div>
-              <label>Scoring</label>
-              <label class="tag"><input type="checkbox" id="normalize" checked />&nbsp;Normalize rounds to equal max</label>
-            </div>
-            <div>
-              <label>Remainder placement mode</label>
-              <div class="row">
-                <label class="tag"><input type="radio" name="remainderMode" value="distribute" checked />&nbsp;Distribute 1 extra per team</label>
-                <label class="tag"><input type="radio" name="remainderMode" value="ownTeam" />&nbsp;Own smaller team</label>
-              </div>
-            </div>
-
-            <!-- Interest bonus list -->
-            <div style="grid-column:1/-1">
-              <label>Interest bonus items (2–10, optional)</label>
-              <div class="hint">If at least 2 are filled, each card can pick one. Matching a previous card <strong>in the same team</strong> gives +10 points.</div>
-              <div class="grid cols-2" id="interestInputs">
-                <input type="text" placeholder="e.g., Robotics" />
-                <input type="text" placeholder="e.g., UI/UX" />
-                <input type="text" placeholder="e.g., AI" />
-                <input type="text" placeholder="e.g., Game Audio" />
-                <input type="text" placeholder="e.g., Data Viz" />
-                <input type="text" placeholder="e.g., Web Perf" />
-                <input type="text" placeholder="e.g., Accessibility" />
-                <input type="text" placeholder="e.g., AR/VR" />
-                <input type="text" placeholder="e.g., Storytelling" />
-                <input type="text" placeholder="e.g., Project Ops" />
-              </div>
-            </div>
-
-          </div>
-        </details>
-
-        <div class="row" style="margin-top:14px;justify-content:flex-end">
-          <button class="btn" id="startBtn">Start</button>
-        </div>
-        <div class="hint">Setup is saved in your browser (localStorage).</div>
+        <p class="hint">
+          Use the <strong>Setup</strong> drawer at the bottom to configure everything. Then click <strong>Start</strong>.
+        </p>
       </section>
 
-      <!-- Play -->
       <section id="playSec" class="panel hidden">
         <div class="play-card grid">
           <div class="row" style="justify-content:space-between">
@@ -212,9 +145,8 @@
           <div class="huge" id="pickerPrompt">Group X — pick a card</div>
           <div class="hint" id="noScoreNote">(no points this card)</div>
 
-          <!-- Timer (optional) -->
-          <div class="row" id="timerWrap" style="justify-content:flex-end" class="hidden">
-            <div class="chip timer" id="timerChip">00:00</div>
+          <div class="row" id="timerWrap" style="justify-content:flex-end">
+            <div class="chip timer hidden" id="timerChip">00:00</div>
           </div>
 
           <div class="grid cols-2" id="entryGrid">
@@ -225,7 +157,6 @@
             <div class="grid cols-2" id="skillInputs"></div>
           </div>
 
-          <!-- interest selector -->
           <div id="interestRow" class="row hidden">
             <label for="interestSelect">Interest</label>
             <select id="interestSelect" aria-label="Interest selection for this card"></select>
@@ -235,20 +166,19 @@
 
           <div class="row" style="justify-content:space-between">
             <div class="row">
-              <button class="btn" id="prevTeam">Prev team</button>
-              <button class="btn" id="nextTeam">Next team</button>
-              <button class="btn" id="backCard">Back</button>
+              <button class="btn" type="button" id="prevTeam">Prev team</button>
+              <button class="btn" type="button" id="nextTeam">Next team</button>
+              <button class="btn" type="button" id="backCard">Back</button>
             </div>
             <div class="row">
-              <button class="btn danger" id="resetBtn">Reset data</button>
-              <button class="btn primary" id="lockBtn" disabled title="Sum must be exactly 20 to lock.">Lock card</button>
+              <button class="btn danger" type="button" id="resetBtn">Reset data</button>
+              <button class="btn primary" type="button" id="lockBtn" disabled title="Sum must be exactly 20 to lock.">Lock card</button>
             </div>
           </div>
 
         </div>
       </section>
 
-      <!-- Fairness end -->
       <section id="endSec" class="panel hidden">
         <h2 style="margin:6px 0 6px">Scoring finished</h2>
         <div class="hint" id="endReason"></div>
@@ -257,52 +187,51 @@
           <div class="chip" id="finalScore2">Group 2: 0</div>
         </div>
         <div class="row" style="margin-top:12px;justify-content:flex-end;gap:10px">
-          <button class="btn" id="toIntake">Add remaining cards</button>
-          <button class="btn" id="toFinal">Skip &amp; view teams</button>
+          <button class="btn" type="button" id="toIntake">Add remaining cards</button>
+          <button class="btn" type="button" id="toFinal">Skip &amp; view teams</button>
         </div>
       </section>
 
-      <!-- Intake -->
       <section id="intakeSec" class="panel hidden">
         <h2 style="margin:6px 0 10px">Add remaining cards</h2>
         <div class="hint" id="intakeHint">Enter cards below. Only rows that sum to 20 are included.</div>
         <div id="intakeRows" class="grid" style="margin-top:10px;gap:10px"></div>
         <div class="row" style="margin-top:12px;justify-content:space-between">
-          <button class="btn" id="addRow">Add another card</button>
-          <button class="btn primary" id="assignAuto">Assign &amp; continue</button>
+          <button class="btn" type="button" id="addRow">Add another card</button>
+          <button class="btn primary" type="button" id="assignAuto">Assign &amp; continue</button>
         </div>
       </section>
 
-      <!-- Final Teams -->
       <section id="finalSec" class="panel hidden">
         <h2 style="margin:6px 0 10px">Final Teams</h2>
         <div class="final-list" id="finalList"></div>
         <div class="row" style="margin-top:12px;justify-content:flex-end;gap:10px">
-          <button class="btn" id="exportCSV">Export CSV</button>
-          <button class="btn" id="exportJSON">Export JSON</button>
-          <button class="btn danger" id="restart">Restart program</button>
+          <button class="btn" type="button" id="exportCSV">Export CSV</button>
+          <button class="btn" type="button" id="exportJSON">Export JSON</button>
+          <button class="btn danger" type="button" id="restart">Restart program</button>
         </div>
       </section>
 
     </div>
   </main>
 
-  <!-- Settings drawer -->
-  <div class="drawer" id="drawer">
+  <!-- Setup drawer -->
+  <div class="drawer open" id="drawer">
     <div class="inner">
       <div class="bar">
-        <button class="btn" id="toggleDrawer" aria-expanded="false"><span class="caret">▴</span>&nbsp;Settings</button>
-        <div class="hint">Runtime editing for names, participants, skills, team size, scoring, remainder</div>
+        <button class="btn" type="button" id="toggleDrawer" aria-expanded="true"><span class="caret">▴</span>&nbsp;Setup</button>
+        <div class="hint">Configure here and press <strong>Start</strong>.</div>
       </div>
       <div class="content">
+        <h3 style="margin:0 0 8px;">Setup</h3>
         <div class="grid cols-2">
           <div class="panel">
             <div class="grid cols-2">
-              <div><label>Group 1 name</label><input type="text" id="dgname0" /></div>
-              <div><label>Group 2 name</label><input type="text" id="dgname1" /></div>
-              <div><label>Participants</label><input type="number" id="dparticipants" min="0" step="1" /></div>
-              <div><label>Team size</label><input type="number" id="dteamSize" min="2" max="8" step="1" /></div>
-              <div><label>Normalize rounds</label><label class="tag"><input type="checkbox" id="dnormalize" />&nbsp;Equal max per round</label></div>
+              <div><label>Group 1 name</label><input type="text" id="dgname0" placeholder="Group 1"/></div>
+              <div><label>Group 2 name</label><input type="text" id="dgname1" placeholder="Group 2"/></div>
+              <div><label>Participants</label><input type="number" id="dparticipants" min="0" step="1" placeholder="e.g., 28"/></div>
+              <div><label>Team size</label><input type="number" id="dteamSize" min="2" max="8" step="1"/></div>
+              <div><label>Normalize rounds</label><label class="tag"><input type="checkbox" id="dnormalize"/>&nbsp;Equal max per round</label></div>
               <div>
                 <label>Remainder mode</label>
                 <select id="dremainder">
@@ -310,28 +239,52 @@
                   <option value="ownTeam">Own smaller team</option>
                 </select>
               </div>
-              <!-- NEW: timer setting -->
               <div>
                 <label>Selection timer (seconds)</label>
                 <input type="number" id="dtimer" min="0" step="5" placeholder="0 = off" />
               </div>
             </div>
+
             <div style="margin-top:10px">
               <label>Skills</label>
               <div class="grid cols-4">
-                <input type="text" id="dskill0" />
-                <input type="text" id="dskill1" />
-                <input type="text" id="dskill2" />
-                <input type="text" id="dskill3" />
+                <input type="text" id="dskill0" placeholder="Visual"/>
+                <input type="text" id="dskill1" placeholder="Sound"/>
+                <input type="text" id="dskill2" placeholder="Programming"/>
+                <input type="text" id="dskill3" placeholder="Project Management"/>
               </div>
             </div>
-            <div class="row" style="margin-top:10px;justify-content:flex-end">
-              <button class="btn" id="drawerSave">Save settings</button>
+
+            <div style="margin-top:10px">
+              <label>Interest bonus items (2–10, optional)</label>
+              <div class="hint">If at least 2 are filled, each card can pick one. Matching a previous card in the same team gives +10 points.</div>
+              <div class="grid cols-2" id="dInterestInputs">
+                <input type="text" placeholder="e.g., Robotics"/>
+                <input type="text" placeholder="e.g., UI/UX"/>
+                <input type="text" placeholder="e.g., AI"/>
+                <input type="text" placeholder="e.g., Game Audio"/>
+                <input type="text" placeholder="e.g., Data Viz"/>
+                <input type="text" placeholder="e.g., Web Perf"/>
+                <input type="text" placeholder="e.g., Accessibility"/>
+                <input type="text" placeholder="e.g., AR/VR"/>
+                <input type="text" placeholder="e.g., Storytelling"/>
+                <input type="text" placeholder="e.g., Project Ops"/>
+              </div>
             </div>
+
+            <div class="plan-hint" id="planningHint" style="margin-top:10px">
+              Set Participants and Team size to see a planning hint…
+            </div>
+
+            <div class="row" style="margin-top:12px;justify-content:space-between">
+              <span class="hint">Press <strong>Start</strong> to begin (you can still tweak later).</span>
+              <div>
+                <button class="btn" type="button" id="drawerSave">Save</button>
+                <button class="btn primary" type="button" id="drawerStart">Start</button>
+              </div>
+            </div>
+
           </div>
-
-          <!-- Ownership editor removed -->
-
         </div>
       </div>
     </div>
@@ -346,8 +299,8 @@
       <div class="row" id="overlayStats"></div>
       <ul class="stage-list" id="overlayList" style="margin:8px 0 0;padding-left:18px"></ul>
       <div class="row" style="margin-top:12px;justify-content:flex-end;gap:10px">
-        <button class="btn" id="overlayUndo">Undo last lock</button>
-        <button class="btn" id="overlayClose">Continue</button>
+        <button class="btn" type="button" id="overlayUndo">Undo last lock</button>
+        <button class="btn" type="button" id="overlayClose">Continue</button>
       </div>
     </div>
   </div>
@@ -357,9 +310,11 @@
 <script>
 (function(){
   "use strict";
-  const LSKEY = "tbcg_state_v5"; // bumped for timer
+  const LSKEY = "tbcg_state_v12"; // start reliability
 
-  // -------- State / Model --------
+  // Basic error visibility
+  window.addEventListener("error", (e)=>{ console.error("App error:", e.message, e.error); });
+
   function defaultTeam(i, teamSize){
     const pairToGroup = (i % 2 === 0) ? 1 : 0;
     const tripToGroup = 1 - pairToGroup;
@@ -371,7 +326,7 @@
     return {cards, names, interests, locked, extras:[], pairToGroup, tripToGroup, quadToGroup};
   }
   function defaultState(){
-    const teamSize = 4;
+    const teamSize=4;
     return {
       setupDone:false,
       skills:["Visual","Sound","Programming","Project Management"],
@@ -381,144 +336,62 @@
       groupNames:["Group 1","Group 2"],
       remainderMode:"distribute",
       curated:[],
-      timerSeconds:0,   // NEW
-      currentTeam:0,
-      currentCard:0,
-      scoringEnded:false,
-      endWhy:"",
+      timerSeconds:0,
+      currentTeam:0,currentCard:0,
+      scoringEnded:false,endWhy:"",
       totals:[0,0],
       teams:[defaultTeam(0,teamSize),defaultTeam(1,teamSize),defaultTeam(2,teamSize),defaultTeam(3,teamSize)],
       lastLock:null
     };
   }
-  let S = load();
-
-  function safeMigrate(state){
+  let S = loadState();
+  function loadState(){
+    try{const raw=localStorage.getItem(LSKEY);if(raw){return migrate(JSON.parse(raw));}}catch(e){console.warn("loadState",e)}
+    return defaultState();
+  }
+  function migrate(state){
     if(!Array.isArray(state.curated)) state.curated=[];
     if(typeof state.timerSeconds!=="number") state.timerSeconds=0;
-    const ts = Math.max(2, Math.min(8, state.teamSize || 4));
+    const ts = Math.max(2, Math.min(8, state.teamSize||4));
     (state.teams||[]).forEach((t,idx)=>{
-      if(!Array.isArray(t.interests)) t.interests = Array.from({length:ts}, ()=>"");
-      t.cards = (t.cards||[]).slice(0,ts); while(t.cards.length<ts) t.cards.push([0,0,0,0]);
-      t.names = (t.names||[]).slice(0,ts); while(t.names.length<ts) t.names.push("");
+      if(!Array.isArray(t.interests)) t.interests=Array.from({length:ts},()=> "");
+      t.cards=(t.cards||[]).slice(0,ts); while(t.cards.length<ts) t.cards.push([0,0,0,0]);
+      t.names=(t.names||[]).slice(0,ts); while(t.names.length<ts) t.names.push("");
       t.locked=(t.locked||[]).slice(0,ts); while(t.locked.length<ts) t.locked.push(false);
       t.interests=(t.interests||[]).slice(0,ts); while(t.interests.length<ts) t.interests.push("");
-      if(Array.isArray(t.extras)){
-        t.extras = t.extras.map(ex=>({name:ex.name||"", values:Array.isArray(ex.values)?ex.values:[0,0,0,0], interest:(ex.interest||"")}));
-      } else { t.extras=[]; }
-      if(typeof t.pairToGroup!=="number"){ t.pairToGroup=(idx%2===0)?1:0; }
-      if(typeof t.tripToGroup!=="number"){ t.tripToGroup=1-t.pairToGroup; }
-      if(typeof t.quadToGroup!=="number"){ t.quadToGroup=t.pairToGroup; }
+      if(!Array.isArray(t.extras)) t.extras=[];
+      if(typeof t.pairToGroup!=="number"){ t.pairToGroup=(idx%2===0)?1:0; t.tripToGroup=1-t.pairToGroup; t.quadToGroup=t.pairToGroup; }
     });
     return state;
   }
-  function load(){
-    try{ const raw = localStorage.getItem(LSKEY); if(raw){ return safeMigrate(JSON.parse(raw)); } }catch(e){}
-    return defaultState();
-  }
   function save(){ localStorage.setItem(LSKEY, JSON.stringify(S)); }
-  function resetAll(){ localStorage.removeItem(LSKEY); S=defaultState(); render(); }
 
-  // -------- Utils --------
-  const $ = s=>document.querySelector(s);
-  const $$ = s=>Array.from(document.querySelectorAll(s));
-  function clamp(v,min,max){ return Math.max(min, Math.min(max,v)); }
-  function sum(a){ return a.reduce((x,y)=>x+y,0); }
+  const $=s=>document.querySelector(s);
+  const $$=s=>Array.from(document.querySelectorAll(s));
+  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+  const sum=a=>a.reduce((x,y)=>x+y,0);
+  const skillNames=()=> (S.skills && S.skills.length===4)?S.skills:["Skill 1","Skill 2","Skill 3","Skill 4"];
+  const curatedActive=()=> Array.isArray(S.curated) && S.curated.filter(x=>x && x.trim()).length>=2;
   function getTeamSize(){ return Math.max(2, Math.min(8, S.teamSize||4)); }
 
-  // planned base teams (even number)
   function plannedBaseTeams(){
     const TS = getTeamSize();
-    if(!S.participants || S.participants<=0){
-      return Math.max(2, S.teams.length);
-    }
+    if(!S.participants || S.participants<=0) return Math.max(2,S.teams.length);
     const maxFull = Math.floor(S.participants / TS);
-    const even = Math.floor(maxFull/2)*2;
-    return Math.max(2, even);
+    const stagesPerTeam = TS - 1;
+    const needsEvenTeams = (stagesPerTeam % 2 === 1);
+    return needsEvenTeams ? Math.max(2, Math.floor(maxFull/2)*2) : Math.max(1, maxFull);
   }
   function ensureBaseTeams(){
     const need = plannedBaseTeams();
     const TS = getTeamSize();
-    while(S.teams.length < need){
-      S.teams.push(defaultTeam(S.teams.length, TS));
-    }
+    while(S.teams.length < need){ S.teams.push(defaultTeam(S.teams.length, TS)); }
   }
-  function ensureTeamSizes(){
-    const ts = getTeamSize();
-    S.teams.forEach((t)=>{
-      if(t.cards.length !== ts){
-        const old = t.cards.length;
-        t.cards.length = ts;
-        t.names.length = ts;
-        t.locked.length = ts;
-        if(!t.interests) t.interests=[];
-        t.interests.length = ts;
-        for(let i=old;i<ts;i++){ t.cards[i]=[0,0,0,0]; t.names[i]=""; t.locked[i]=false; t.interests[i]=""; }
-      }
-    });
-  }
-
   function cardEntered(ti,ci){
-    const t=S.teams[ti]; const vals=(t.cards[ci]||[0,0,0,0]); const name=(t.names[ci]||"").trim();
-    if(t.locked[ci]===true) return true; if(name) return true; return vals.some(v=>v>0);
+    const t=S.teams[ti]; const vals=t.cards[ci]||[0,0,0,0]; const n=(t.names[ci]||"").trim(); if(t.locked[ci]) return true; if(n) return true; return vals.some(v=>v>0);
   }
   function totalEnteredCards(){ let c=0; const TS=getTeamSize(); for(let ti=0;ti<S.teams.length;ti++){ for(let ci=0;ci<TS;ci++){ if(cardEntered(ti,ci)) c++; } } return c; }
 
-  function slotHasAnything(team, i){
-    const vals = team.cards[i] || [0,0,0,0];
-    const name = (team.names[i] || "").trim();
-    const interest = (team.interests && team.interests[i] || "").trim();
-    return team.locked[i] || !!name || !!interest || vals.some(v => v > 0);
-  }
-  function teamIsEmpty(team){
-    const TS = getTeamSize();
-    if (team.extras && team.extras.length) return false;
-    for (let i = 0; i < TS; i++){
-      if (slotHasAnything(team, i)) return false;
-    }
-    return true;
-  }
-
-  function advanceToNextPlayable() {
-    const TS = getTeamSize();
-    for (let tries = 0; tries < S.teams.length * TS; tries++) {
-      const t = S.teams[S.currentTeam];
-      if (!t.locked[S.currentCard]) return;
-      if (S.currentCard < TS - 1) { S.currentCard++; }
-      else { S.currentCard = 0; S.currentTeam = (S.currentTeam + 1) % S.teams.length; }
-    }
-  }
-
-  // -------- Timer helpers --------
-  let timerId = null;
-  let timerRemaining = 0;
-  function formatMMSS(sec){ sec=Math.max(0,Math.floor(sec||0)); const m=Math.floor(sec/60), s=sec%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
-  function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
-  function startTimerIfNeeded(){
-    const wrap = $("#timerWrap");
-    const chip = $("#timerChip");
-    stopTimer();
-    const ti=S.currentTeam, ci=S.currentCard;
-    const t=S.teams[ti];
-    if(!S.timerSeconds || S.timerSeconds<=0 || t.locked[ci]){
-      wrap.classList.add("hidden");
-      return;
-    }
-    timerRemaining = S.timerSeconds;
-    chip.textContent = formatMMSS(timerRemaining);
-    chip.classList.remove("expired");
-    wrap.classList.remove("hidden");
-    timerId = setInterval(()=>{
-      timerRemaining--;
-      chip.textContent = formatMMSS(timerRemaining);
-      if(timerRemaining<=0){
-        chip.classList.add("expired");
-        stopTimer();
-      }
-    },1000);
-  }
-
-  // -------- Fairness guard --------
   function fairnessCheckMaybe(){
     if(!S.participants || S.participants<=0) return;
     ensureBaseTeams();
@@ -528,198 +401,122 @@
     const TS = getTeamSize();
     const BASE = plannedBaseTeams();
 
-    function presentCountTeam(ti){
-      let k=0; for(let ci=0;ci<TS;ci++){ if(cardEntered(ti,ci)) k++; } return k;
-    }
-
-    let completed = 0;
-    for(let j=0;j<BASE;j++){ if(presentCountTeam(j) >= TS) completed++; }
+    function presentCountTeam(ti){ let k=0; for(let ci=0;ci<TS;ci++){ if(cardEntered(ti,ci)) k++; } return k; }
+    let completed = 0; for(let j=0;j<BASE;j++){ if(presentCountTeam(j)>=TS) completed++; }
 
     if(completed >= BASE){
-      if(remaining >= TS*2){
-        S.teams.push(defaultTeam(S.teams.length, TS));
-        S.teams.push(defaultTeam(S.teams.length, TS));
-        save();
-        return;
+      const stagesPerTeam = TS - 1;
+      const needsEvenTeams = (stagesPerTeam % 2 === 1);
+      if(needsEvenTeams){
+        if(remaining >= TS*2){ S.teams.push(defaultTeam(S.teams.length, TS)); S.teams.push(defaultTeam(S.teams.length, TS)); save(); return; }
+      }else{
+        if(remaining >= TS){ S.teams.push(defaultTeam(S.teams.length, TS)); save(); return; }
       }
-      S.scoringEnded = true;
-      S.endWhy = "All teams completed.";
-      save(); showSection("end"); return;
+      S.scoringEnded=true; S.endWhy="All teams completed."; save(); showSection("end"); return;
     }
 
-    const ti = S.currentTeam;
-    const k = presentCountTeam(ti);
-    let need;
-    if (k <= 0) need = 2;
-    else if (k < TS) need = 1;
-    else need = 2;
-
-    if (remaining < need){
-      S.scoringEnded = true;
-      S.endWhy = `Fairness: only ${remaining} cards left, but ${need} needed to reach the next scoring stage for the current team.`;
+    const ti=S.currentTeam; const k=presentCountTeam(ti);
+    let need; if(k<=0) need=2; else if(k<TS) need=1; else need=2;
+    if(remaining < need){
+      S.scoringEnded=true;
+      S.endWhy=`Fairness: only ${remaining} cards left, but ${need} needed to reach the next scoring stage for the current team.`;
       save(); showSection("end"); return;
     }
   }
 
-  // -------- Scoring math --------
-  function ownerForStage(team, stageIndex){ return (stageIndex % 2 === 0) ? team.pairToGroup : (1 - team.pairToGroup); }
   function stageTargetForCardIndex(idx){
-    const stageIndex = idx + 1;
-    if(stageIndex < 2) return {stage:"baseline", target:0, max:0, stageIndex};
-    const target = 5 * stageIndex;
-    const max = 4 * target;
-    const name = stageIndex===2 ? "pair" : (stageIndex===3 ? "triplet" : `stage${stageIndex}`);
-    return {stage:name, target, max, stageIndex};
+    const stageIndex=idx+1; if(stageIndex<2) return {stage:"baseline",target:0,max:0,stageIndex};
+    const target=5*stageIndex; const max=4*target;
+    const name=stageIndex===2?"pair":(stageIndex===3?"triplet":`stage${stageIndex}`);
+    return {stage:name,target,max,stageIndex};
   }
-  function teamSumUpTo(team, upTo){
-    const sums=[0,0,0,0];
-    for(let i=0;i<=upTo;i++){
-      const v=team.cards[i]||[0,0,0,0];
-      for(let k=0;k<4;k++) sums[k]+=v[k];
-    }
-    return sums;
-  }
-  function stagePointsFromSums(sums, target){
-    let pts=0; const perSkill=[];
-    for(let i=0;i<4;i++){
-      const d=Math.abs(target - sums[i]);
-      const p=target - d;
-      perSkill.push({delta:sums[i]-target, points:p});
-      pts+=p;
-    }
-    return {pts, perSkill};
-  }
-  function pickerIndexFor(ti, ci){
-    const team=S.teams[ti];
-    const starterIndex = 1 - team.pairToGroup;
-    return (ci % 2 === 0) ? starterIndex : (1 - starterIndex);
-  }
-  function allTeamsComplete(){
-    const TS=getTeamSize();
-    const BASE = plannedBaseTeams();
-    return S.teams.slice(0,BASE).every(t => t.locked.slice(0,TS).filter(Boolean).length===TS);
-  }
-  function skillNames(){ return (S.skills && S.skills.length===4) ? S.skills : ["Skill 1","Skill 2","Skill 3","Skill 4"]; }
-  function curatedActive(){ return Array.isArray(S.curated) && S.curated.filter(x=>x && x.trim()).length>=2; }
+  function teamSumUpTo(team, upTo){ const s=[0,0,0,0]; for(let i=0;i<=upTo;i++){ const v=team.cards[i]||[0,0,0,0]; for(let k=0;k<4;k++) s[k]+=v[k]; } return s; }
+  function stagePointsFromSums(sums,target){ let pts=0; const per=[]; for(let i=0;i<4;i++){ const d=Math.abs(target-sums[i]); const p=target-d; per.push({delta:sums[i]-target,points:p}); pts+=p; } return {pts,perSkill:per}; }
+  function pickerIndexFor(ti,ci){ const team=S.teams[ti]; const starter=1-team.pairToGroup; return (ci%2===0)?starter:(1-starter); }
+  function allTeamsComplete(){ const TS=getTeamSize(); const BASE=plannedBaseTeams(); return S.teams.slice(0,BASE).every(t=> t.locked.slice(0,TS).filter(Boolean).length===TS ); }
 
-  // -------- Rendering --------
+  let timerId=null, timerRemaining=0;
+  function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+  function formatMMSS(sec){sec=Math.max(0,Math.floor(sec||0)); const m=Math.floor(sec/60),s=sec%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
+  function startTimerIfNeeded(){
+    const chip=$("#timerChip"); chip.classList.add("hidden"); chip.classList.remove("expired"); stopTimer();
+    const ti=S.currentTeam, ci=S.currentCard, t=S.teams[ti];
+    if(!S.timerSeconds || S.timerSeconds<=0 || t.locked[ci]) return;
+    chip.classList.remove("hidden"); timerRemaining=S.timerSeconds; chip.textContent=formatMMSS(timerRemaining);
+    timerId=setInterval(()=>{ timerRemaining--; chip.textContent=formatMMSS(timerRemaining); if(timerRemaining<=0){ chip.classList.add("expired"); stopTimer(); } },1000);
+  }
+
   function renderHeader(){
-    $("#score1").textContent = `${S.groupNames[0]}: ${S.totals[0]}`;
-    $("#score2").textContent = `${S.groupNames[1]}: ${S.totals[1]}`;
-    const entered = totalEnteredCards();
-    const mode = `Size ${getTeamSize()} · ${S.normalize?'Normalized':'Raw'} scoring`;
-    $("#modeChip").textContent = mode;
+    $("#score1").textContent=`${S.groupNames[0]}: ${S.totals[0]}`;
+    $("#score2").textContent=`${S.groupNames[1]}: ${S.totals[1]}`;
+    const entered=totalEnteredCards();
+    $("#modeChip").textContent=`Size ${getTeamSize()} · ${S.normalize?'Normalized':'Raw'} scoring`;
     if(S.participants && S.participants>0){
-      const pct = Math.max(0, Math.min(1, entered / S.participants));
-      $("#progressLabel").textContent = `${entered} / ${S.participants} (${Math.round(pct*100)}%)`;
-      $("#progressBar").style.insetInlineEnd = (1 - pct)*100 + "%";
+      const pct=Math.max(0,Math.min(1,entered/S.participants));
+      $("#progressLabel").textContent=`${entered} / ${S.participants} (${Math.round(pct*100)}%)`;
+      $("#progressBar").style.insetInlineEnd=(1-pct)*100+"%";
     }else{
-      $("#progressLabel").textContent = `${entered} cards entered`;
-      const pct = Math.max(0, Math.min(1, (entered%20)/20));
-      $("#progressBar").style.insetInlineEnd = (1 - pct)*100 + "%";
+      $("#progressLabel").textContent=`${entered} cards entered`;
+      const pct=Math.max(0,Math.min(1,(entered%20)/20));
+      $("#progressBar").style.insetInlineEnd=(1-pct)*100+"%";
     }
   }
-  function rebuildSkillInputs(ti, ci){
+  function rebuildSkillInputs(ti,ci){
     const grid=$("#skillInputs"); grid.innerHTML="";
     const t=S.teams[ti]; const vals=t.cards[ci]||[0,0,0,0];
     for(let i=0;i<4;i++){
       const wrap=document.createElement("div");
-      const lab=document.createElement("label");
-      lab.textContent=skillNames()[i]; lab.setAttribute("for", `skill_${i}`);
-      const inp=document.createElement("input");
-      inp.type="number"; inp.min="0"; inp.max="20"; inp.step="1"; inp.id=`skill_${i}`; inp.value=vals[i];
-      inp.addEventListener("input", ()=>{
-        const v=parseInt(inp.value||"0",10);
-        t.cards[ci][i]=isNaN(v)?0:clamp(v,0,20);
-        updateSumLine(ti,ci); save();
-      });
+      const lab=document.createElement("label"); lab.textContent=skillNames()[i]; lab.setAttribute("for",`skill_${i}`);
+      const inp=document.createElement("input"); inp.type="number"; inp.min="0"; inp.max="20"; inp.step="1"; inp.id=`skill_${i}`; inp.value=vals[i];
+      inp.addEventListener("input",()=>{ const v=parseInt(inp.value||"0",10); t.cards[ci][i]=isNaN(v)?0:clamp(v,0,20); updateSumLine(ti,ci); save(); });
       if(t.locked[ci]) inp.disabled=true;
       wrap.appendChild(lab); wrap.appendChild(inp); grid.appendChild(wrap);
     }
   }
   function rebuildInterestSelect(ti,ci){
-    const row=$("#interestRow");
-    const sel=$("#interestSelect");
-    if(!curatedActive()){
-      row.classList.add("hidden");
-      sel.innerHTML="";
-      return;
-    }
+    const row=$("#interestRow"), sel=$("#interestSelect");
+    if(!curatedActive()){ row.classList.add("hidden"); sel.innerHTML=""; return; }
     row.classList.remove("hidden");
     const items=S.curated.filter(x=>x && x.trim());
-    sel.innerHTML="";
-    const opt0=document.createElement("option"); opt0.value=""; opt0.textContent="— choose —"; sel.appendChild(opt0);
+    sel.innerHTML=""; const opt0=document.createElement("option"); opt0.value=""; opt0.textContent="— choose —"; sel.appendChild(opt0);
     items.forEach(it=>{ const o=document.createElement("option"); o.value=it; o.textContent=it; sel.appendChild(o); });
-    const t=S.teams[ti];
-    sel.value = (t.interests && t.interests[ci]) || "";
-    sel.disabled=!!t.locked[ci];
-    sel.onchange=()=>{ t.interests[ci]=sel.value; save(); };
+    const t=S.teams[ti]; sel.value=(t.interests&&t.interests[ci])||""; sel.disabled=!!t.locked[ci]; sel.onchange=()=>{ t.interests[ci]=sel.value; save(); };
   }
   function updateSumLine(ti,ci){
-    const t=S.teams[ti];
-    const s=sum(t.cards[ci]);
-    const locked = !!t.locked[ci];
-
-    const line=$("#sumLine");
-    let txt="", cls="";
-    if(s===20){ cls="sum-ok"; txt="Looks good – ready to lock"; }
-    else if(s<20){ cls="sum-under"; txt=`Under by ${20-s}`; }
-    else { cls="sum-over"; txt=`Over by ${s-20}`; }
-    line.className=`sumline ${cls}`;
-    line.textContent=`Sum: ${s} / 20 — ${txt}`;
-
-    const btn = $("#lockBtn");
-    const canLock = (s===20 && !locked);
-    btn.disabled = !canLock;
-    if (locked) btn.title = "This card is already locked.";
-    else if (s !== 20) btn.title = "Sum must be exactly 20 to lock.";
-    else btn.title = "";
+    const t=S.teams[ti], s=sum(t.cards[ci]); const locked=!!t.locked[ci];
+    const line=$("#sumLine"); let txt="",cls="";
+    if(s===20){cls="sum-ok";txt="Looks good – ready to lock"} else if(s<20){cls="sum-under";txt=`Under by ${20-s}`} else {cls="sum-over";txt=`Over by ${s-20}`}
+    line.className=`sumline ${cls}`; line.textContent=`Sum: ${s} / 20 — ${txt}`;
+    const btn=$("#lockBtn"); const can=(s===20 && !locked); btn.disabled=!can; btn.title=locked?"This card is already locked.":(s!==20?"Sum must be exactly 20 to lock.":"");
+  }
+  function advanceToNextPlayable(){
+    const TS=getTeamSize();
+    for(let tries=0;tries<S.teams.length*TS;tries++){
+      const t=S.teams[S.currentTeam]; if(!t.locked[S.currentCard]) return;
+      if(S.currentCard<TS-1) S.currentCard++; else { S.currentCard=0; S.currentTeam=(S.currentTeam+1)%S.teams.length; }
+    }
   }
   function renderPlay(){
-    ensureTeamSizes();
-    ensureBaseTeams();
-    advanceToNextPlayable();
-
-    const TS = getTeamSize();
-    const ti=S.currentTeam, ci=S.currentCard, t=S.teams[ti];
-    $("#turnInfoTeam").textContent=`Team ${ti+1}`;
-    $("#turnInfoCard").textContent=`Card ${ci+1} / ${TS}`;
-    const pickerIdx = pickerIndexFor(ti, ci);
-    $("#pickerPrompt").innerHTML = `<span style="color:#22d3ee">${S.groupNames[pickerIdx]}</span> — pick a card`;
-    $("#noScoreNote").classList.toggle("hidden", !(ci===0));
-
-    const nameEl=$("#studentName"); nameEl.value=t.names[ci]||""; nameEl.disabled=!!t.locked[ci];
-    nameEl.oninput=(e)=>{ t.names[ci]=(e.target.value||"").slice(0,120); updateSumLine(ti,ci); save(); };
-
-    rebuildSkillInputs(ti,ci);
-    rebuildInterestSelect(ti,ci);
-    updateSumLine(ti,ci);
-    $("#backCard").disabled=(ci===0);
-
-    // NEW: start/reset timer
+    ensureBaseTeams(); advanceToNextPlayable();
+    const TS=getTeamSize(); const ti=S.currentTeam,ci=S.currentCard,t=S.teams[ti];
+    $("#turnInfoTeam").textContent=`Team ${ti+1}`; $("#turnInfoCard").textContent=`Card ${ci+1} / ${TS}`;
+    const pickerIdx=pickerIndexFor(ti,ci);
+    $("#pickerPrompt").innerHTML=`<span style="color:#22d3ee">${S.groupNames[pickerIdx]}</span> — pick a card`;
+    $("#noScoreNote").classList.toggle("hidden",!(ci===0));
+    const nameEl=$("#studentName"); nameEl.value=t.names[ci]||""; nameEl.disabled=!!t.locked[ci]; nameEl.oninput=e=>{ t.names[ci]=(e.target.value||"").slice(0,120); updateSumLine(ti,ci); save(); };
+    rebuildSkillInputs(ti,ci); rebuildInterestSelect(ti,ci); updateSumLine(ti,ci); $("#backCard").disabled=(ci===0);
     startTimerIfNeeded();
   }
-  function renderEnd(){
-    $("#endReason").textContent=S.endWhy || "All teams completed.";
-    $("#finalScore1").textContent=`${S.groupNames[0]}: ${S.totals[0]}`;
-    $("#finalScore2").textContent=`${S.groupNames[1]}: ${S.totals[1]}`;
-  }
+  function renderEnd(){ $("#endReason").textContent=S.endWhy||"All teams completed."; $("#finalScore1").textContent=`${S.groupNames[0]}: ${S.totals[0]}`; $("#finalScore2").textContent=`${S.groupNames[1]}: ${S.totals[1]}`; }
+  function teamIsEmpty(team){ const TS=getTeamSize(); if(team.extras && team.extras.length) return false; for(let i=0;i<TS;i++){ const v=team.cards[i]||[0,0,0,0]; const n=(team.names[i]||"").trim(); if(team.locked[i]||n||v.some(x=>x>0)) return false; } return true; }
   function renderFinal(){
-    const wrap=$("#finalList"); wrap.innerHTML="";
-    const TS=getTeamSize();
-    S.teams.forEach((t,i)=>{
-      if (teamIsEmpty(t)) return;
+    const wrap=$("#finalList"); wrap.innerHTML=""; const TS=getTeamSize();
+    S.teams.forEach((t,i)=>{ if(teamIsEmpty(t)) return;
       const card=document.createElement("div"); card.className="team-card";
       const title=document.createElement("div"); title.className="team-title"; title.textContent=`Team ${i+1}`; card.appendChild(title);
       const ul=document.createElement("ul"); ul.style.margin="0"; ul.style.paddingLeft="18px";
-      for(let k=0;k<TS;k++){
-        const name=t.names[k]||"(empty)"; const vals=t.cards[k]||[0,0,0,0];
-        const intr=t.interests && t.interests[k] ? ` (${t.interests[k]})` : "";
-        const li=document.createElement("li"); li.textContent=`${name} · ${vals.join("-")}${intr}`; ul.appendChild(li);
-      }
-      if(t.extras && t.extras.length){
-        t.extras.forEach(ex=>{ const li2=document.createElement("li"); li2.textContent=`${ex.name} · ${ex.values.join("-")}${ex.interest?` (${ex.interest})`:""}`; ul.appendChild(li2); });
-      }
+      for(let k=0;k<TS;k++){ const name=t.names[k]||"(empty)"; const vals=t.cards[k]||[0,0,0,0]; const intr=t.interests&&t.interests[k]?` (${t.interests[k]})`:""; const li=document.createElement("li"); li.textContent=`${name} · ${vals.join("-")}${intr}`; ul.appendChild(li); }
+      if(t.extras && t.extras.length){ t.extras.forEach(ex=>{ const li2=document.createElement("li"); li2.textContent=`${ex.name} · ${ex.values.join("-")}${ex.interest?` (${ex.interest})`:""}`; ul.appendChild(li2); }); }
       card.appendChild(ul); wrap.appendChild(card);
     });
   }
@@ -735,18 +532,43 @@
     if(which==="intake"){ stopTimer(); buildIntakeRows(); }
     if(which==="final"){ stopTimer(); renderFinal(); }
   }
+
+  function planningSummary(p, ts){
+    if(!(p>0 && ts>=2)) return "Set Participants and Team size to see a planning hint…";
+    const stagesPerTeam = ts - 1;
+    const needsEvenTeams = (stagesPerTeam % 2 === 1);
+    const maxFull = Math.floor(p/ts);
+    const planned = needsEvenTeams ? Math.max(2, Math.floor(maxFull/2)*2) : Math.max(1, maxFull);
+    const cardsPlanned = planned*ts;
+    const remaining = p - cardsPlanned;
+    let extraMsg="";
+    if(needsEvenTeams){
+      const needForMore = ts*2;
+      extraMsg = remaining>=needForMore ? `You can add two more full teams later (need ${needForMore} cards).` : `To add two more teams fairly, you’d need ${needForMore} cards; you’ll have ${remaining}.`;
+    }else{
+      const needOne = ts;
+      extraMsg = remaining>=needOne ? `You can add one more full team later (need ${needOne} cards).` : `To add another team, you’d need ${needOne} cards; you’ll have ${remaining}.`;
+    }
+    return `With ${p} participants and team size ${ts}: planned scoring teams = ${planned} → scoring ends after ${cardsPlanned} cards. ${extraMsg}`;
+  }
+  function updatePlanningHint(){
+    const p = parseInt($("#dparticipants").value||"0",10)||0;
+    const ts = clamp(parseInt($("#dteamSize").value||"4",10)||4,2,8);
+    $("#planningHint").textContent = planningSummary(p, ts);
+  }
+
   function render(){
-    ensureTeamSizes();
     ensureBaseTeams();
+    $("#dgname0").value=S.groupNames[0]; $("#dgname1").value=S.groupNames[1];
+    $("#dparticipants").value=S.participants||""; $("#dremainder").value=S.remainderMode;
+    $("#dteamSize").value=S.teamSize||4; $("#dnormalize").checked=!!S.normalize;
+    $("#dskill0").value=S.skills[0]; $("#dskill1").value=S.skills[1]; $("#dskill2").value=S.skills[2]; $("#dskill3").value=S.skills[3];
+    $("#dtimer").value=S.timerSeconds||0;
+    const dIns = Array.from($("#dInterestInputs").querySelectorAll("input[type='text']"));
+    dIns.forEach((el,i)=>{ el.value=(S.curated[i]||""); });
+    updatePlanningHint();
+
     if(!S.setupDone){
-      $("#skill0").value=S.skills[0]; $("#skill1").value=S.skills[1]; $("#skill2").value=S.skills[2]; $("#skill3").value=S.skills[3];
-      $("#participants").value=S.participants||""; $("#gname0").value=S.groupNames[0]; $("#gname1").value=S.groupNames[1];
-      $("#teamSize").value=S.teamSize||4; $("#normalize").checked=!!S.normalize;
-      $$("input[name='remainderMode']").forEach(r=>r.checked=(r.value===S.remainderMode));
-      const box = $("#interestInputs");
-      const ins = Array.from(box.querySelectorAll("input[type='text']"));
-      const cur = (S.curated||[]);
-      ins.forEach((el,idx)=>{ el.value = cur[idx] || ""; });
       showSection("setup");
     }else if(S.scoringEnded || allTeamsComplete()){
       if(allTeamsComplete() && !S.scoringEnded){ S.endWhy="All teams completed."; save(); }
@@ -754,368 +576,215 @@
     }else{
       showSection("play");
     }
-    $("#dgname0").value=S.groupNames[0]; $("#dgname1").value=S.groupNames[1];
-    $("#dparticipants").value=S.participants||""; $("#dremainder").value=S.remainderMode;
-    $("#dteamSize").value=S.teamSize||4; $("#dnormalize").checked=!!S.normalize;
-    $("#dskill0").value=S.skills[0]; $("#dskill1").value=S.skills[1]; $("#dskill2").value=S.skills[2]; $("#dskill3").value=S.skills[3];
-    $("#dtimer").value=S.timerSeconds||0;
   }
 
-  // -------- Events --------
-  $("#startBtn").addEventListener("click", ()=>{
-    const sk=[$("#skill0").value||"Visual", $("#skill1").value||"Sound", $("#skill2").value||"Programming", $("#skill3").value||"Project Management"];
-    const part=parseInt($("#participants").value||"0",10)||0;
-    const g0=$("#gname0").value||"Group 1"; const g1=$("#gname1").value||"Group 2";
-    const ts=clamp(parseInt($("#teamSize").value||"4",10)||4,2,8);
-    const norm = $("#normalize").checked;
-    const rem=($$("input[name='remainderMode']").find(r=>r.checked)||{value:"distribute"}).value;
-    const items = Array.from($("#interestInputs").querySelectorAll("input[type='text']"))
-      .map(i=> (i.value||"").trim())
-      .filter(Boolean)
-      .slice(0,10);
-
-    S.skills=sk; S.participants=part; S.groupNames=[g0,g1]; S.teamSize=ts; S.normalize=!!norm; S.remainderMode=(rem==="ownTeam"?"ownTeam":"distribute");
-    S.curated=items;
-    S.teams=[defaultTeam(0,ts),defaultTeam(1,ts),defaultTeam(2,ts),defaultTeam(3,ts)];
-    ensureBaseTeams();
-    S.currentTeam=0; S.currentCard=0; S.totals=[0,0]; S.scoringEnded=false; S.endWhy=""; S.lastLock=null;
-    S.setupDone=true; save(); render();
+  // Drawer toggle
+  $("#toggleDrawer").addEventListener("click", ()=>{
+    const d=$("#drawer");
+    d.classList.toggle("open");
+    $("#toggleDrawer").setAttribute("aria-expanded", d.classList.contains("open")?"true":"false");
   });
 
-  $("#toggleDrawer").addEventListener("click", ()=>{ const d=$("#drawer"); d.classList.toggle("open"); $("#toggleDrawer").setAttribute("aria-expanded", d.classList.contains("open")?"true":"false"); });
-  $("#drawerSave").addEventListener("click", ()=>{
-    S.groupNames[0]=$("#dgname0").value||"Group 1"; S.groupNames[1]=$("#dgname1").value||"Group 2";
-    S.participants=parseInt($("#dparticipants").value||"0",10)||0;
-    const ts=clamp(parseInt($("#dteamSize").value||"4",10)||4,2,8);
-    const norm=$("#dnormalize").checked;
-    const oldTs = getTeamSize();
-    S.teamSize=ts; S.normalize=!!norm;
-    if(ts!==oldTs){
-      S.teams.forEach((t)=>{
-        const old=t.cards.length;
-        t.cards.length=ts; t.names.length=ts; t.locked.length=ts;
-        if(!t.interests) t.interests=[];
-        t.interests.length=ts;
-        for(let k=old;k<ts;k++){ t.cards[k]=[0,0,0,0]; t.names[k]=""; t.locked[k]=false; t.interests[k]=""; }
-        if(S.currentCard>=ts) S.currentCard=ts-1;
-      });
+  // Save current setup (no start)
+  $("#drawerSave").addEventListener("click", ()=>applyDrawerToState(true));
+
+  // Start game (robust)
+  function startGame(){
+    try{
+      applyDrawerToState(true);
+      S.setupDone=true; S.scoringEnded=false; S.endWhy=""; S.lastLock=null;
+      S.currentTeam=0; S.currentCard=0; S.totals=[0,0];
+      S.teams=[defaultTeam(0,S.teamSize),defaultTeam(1,S.teamSize),defaultTeam(2,S.teamSize),defaultTeam(3,S.teamSize)];
+      ensureBaseTeams(); save();
+      $("#drawer").classList.remove("open");
+      showSection("play"); // explicit switch
+    }catch(err){
+      console.error("startGame failed:", err);
+      alert("Could not start due to an unexpected error. Check console for details.");
     }
+  }
+  $("#drawerStart").addEventListener("click", startGame);
+  $("#drawerStart").addEventListener("keydown", (e)=>{ if(e.key==="Enter" || e.key===" "){ e.preventDefault(); startGame(); } });
+
+  function applyDrawerToState(copyCurated){
+    const ts = clamp(parseInt($("#dteamSize").value||"4",10)||4,2,8);
+    S.groupNames=[($("#dgname0").value||"Group 1"), ($("#dgname1").value||"Group 2")];
+    S.participants=parseInt($("#dparticipants").value||"0",10)||0;
+    S.teamSize=ts; S.normalize=!!$("#dnormalize").checked;
     S.remainderMode=$("#dremainder").value==="ownTeam"?"ownTeam":"distribute";
-    S.skills=[$("#dskill0").value||"Visual", $("#dskill1").value||"Sound", $("#dskill2").value||"Programming", $("#dskill3").value||"Project Management"];
-    S.timerSeconds = Math.max(0, parseInt($("#dtimer").value||"0",10) || 0);
-    ensureBaseTeams();
-    save(); render();
-  });
+    S.timerSeconds=Math.max(0, parseInt($("#dtimer").value||"0",10)||0);
+    S.skills=[($("#dskill0").value||"Visual"),($("#dskill1").value||"Sound"),($("#dskill2").value||"Programming"),($("#dskill3").value||"Project Management")];
+    if(copyCurated){
+      S.curated = Array.from($("#dInterestInputs").querySelectorAll("input[type='text']"))
+        .map(i=>(i.value||"").trim()).filter(Boolean).slice(0,10);
+    }
+    S.teams.forEach(t=>{
+      const old=t.cards.length; t.cards.length=ts; t.names.length=ts; t.locked.length=ts; (t.interests||(t.interests=[])).length=ts;
+      for(let k=old;k<ts;k++){ t.cards[k]=[0,0,0,0]; t.names[k]=""; t.locked[k]=false; t.interests[k]=""; }
+      if(S.currentCard>=ts) S.currentCard=ts-1;
+    });
+    ensureBaseTeams(); save(); updatePlanningHint();
+  }
+
+  $("#dparticipants").addEventListener("input", updatePlanningHint);
+  $("#dteamSize").addEventListener("input", updatePlanningHint);
 
   $("#prevTeam").addEventListener("click", ()=>{ S.currentTeam=(S.currentTeam+S.teams.length-1)%S.teams.length; save(); render(); });
   $("#nextTeam").addEventListener("click", ()=>{ S.currentTeam=(S.currentTeam+1)%S.teams.length; save(); render(); });
   $("#backCard").addEventListener("click", ()=>{ if(S.currentCard>0){ S.currentCard--; save(); render(); } });
-  $("#resetBtn").addEventListener("click", ()=>{ if(confirm("Clear all data and restart?")) resetAll(); });
+  $("#resetBtn").addEventListener("click", ()=>{ if(confirm("Clear all data and restart?")){ localStorage.removeItem(LSKEY); location.reload(); } });
 
-  // Lock → score + feedback (+ interest bonus)
+  // Lock & scoring (+interest)
   $("#lockBtn").addEventListener("click", ()=>{
-    const TS=getTeamSize();
-    const ti=S.currentTeam, ci=S.currentCard, t=S.teams[ti];
-    if(t.locked[ci]) return;
-    if(sum(t.cards[ci])!==20){ alert("Sum must be exactly 20."); return; }
+    const TS=getTeamSize(); const ti=S.currentTeam, ci=S.currentCard, t=S.teams[ti];
+    if(t.locked[ci]) return; if(sum(t.cards[ci])!==20){ alert("Sum must be exactly 20."); return; }
     t.locked[ci]=true;
-
     const {stage,target,max,stageIndex}=stageTargetForCardIndex(ci);
-    let title="", ownerText="", percent=0, items=[];
-    let bonusApplied = 0;
-
-    if(curatedActive()){
-      const my = (t.interests && t.interests[ci] || "").trim();
-      if(my && ci>0){
-        for(let j=0;j<ci;j++){
-          if((t.interests && t.interests[j]||"").trim() === my){ bonusApplied = 10; break; }
-        }
-      }
-    }
-
+    let title="", ownerText="", percent=0, items=[], bonus=0;
+    if(curatedActive()){ const my=(t.interests&&t.interests[ci]||"").trim(); if(my && ci>0){ for(let j=0;j<ci;j++){ if((t.interests&&t.interests[j]||"").trim()===my){ bonus=10; break; } } } }
     if(stage==="baseline"){
-      title="First card locked — No score yet.";
-      ownerText="No points for baseline (Card 1).";
-      percent=0;
-      S.lastLock={team:ti,card:ci,stage,owner:-1,points:0,bonus:0,values:[].concat(t.cards[ci]), interest:(t.interests&&t.interests[ci])||""};
+      title="First card locked — No score yet."; ownerText="No points for baseline (Card 1)."; percent=0;
+      S.lastLock={team:ti,card:ci,stage,owner:-1,points:0,bonus:0,values:[...t.cards[ci]],interest:(t.interests&&t.interests[ci])||""};
     }else{
-      const sums=teamSumUpTo(t,ci);
-      const r=stagePointsFromSums(sums,target);
-      const owner=ownerForStage(t,stageIndex);
-      const pct = r.pts / max;
-      const add = S.normalize ? Math.round(pct * 100) : r.pts;
-      const totalAdd = add + bonusApplied;
-      S.totals[owner]+= totalAdd;
-      percent=Math.round(pct*100);
-      const label = stageIndex===2?"Pair":(stageIndex===3?"Triplet":`Card ${stageIndex}`);
-      const maxLabel = S.normalize ? "100" : String(max);
-      title=`${label} score — ${S.normalize?add:r.pts} / ${maxLabel} (${percent}%)${bonusApplied?`  +${bonusApplied} bonus`:``}`;
+      const sums=teamSumUpTo(t,ci); const r=stagePointsFromSums(sums,target);
+      const owner = (stageIndex % 2 === 0) ? t.pairToGroup : (1 - t.pairToGroup);
+      const pct = r.pts / max; const add = S.normalize ? Math.round(pct*100) : r.pts; const totalAdd = add + bonus;
+      S.totals[owner]+=totalAdd; percent=Math.round(pct*100);
+      const label=stageIndex===2?"Pair":(stageIndex===3?"Triplet":`Card ${stageIndex}`); const maxLbl=S.normalize?"100":String(max);
+      title=`${label} score — ${S.normalize?add:r.pts} / ${maxLbl} (${percent}%)${bonus?`  +${bonus} bonus`:``}`;
       ownerText=`Points → ${S.groupNames[owner]}`;
-      items=r.perSkill.map((ps,idx)=>{ const nm=skillNames()[idx]; const d=ps.delta; if(d===0) return {text:`${nm}: On target`, cls:"sum-ok"}; if(d>0) return {text:`${nm}: +${d} over`, cls:"sum-over"}; return {text:`${nm}: ${d} under`, cls:"sum-under"}; });
-      if(bonusApplied){ items.unshift({text:`Interest match bonus +${bonusApplied}`, cls:"sum-ok"}); }
-      S.lastLock={team:ti,card:ci,stage,owner,points:totalAdd,bonus:bonusApplied,values:[].concat(t.cards[ci]), interest:(t.interests&&t.interests[ci])||""};
+      items=r.perSkill.map((ps,i)=>{ const nm=skillNames()[i]; const d=ps.delta; if(d===0) return {text:`${nm}: On target`,cls:"sum-ok"}; if(d>0) return {text:`${nm}: +${d} over`,cls:"sum-over"}; return {text:`${nm}: ${d} under`,cls:"sum-under"}; });
+      if(bonus) items.unshift({text:`Interest match bonus +${bonus}`,cls:"sum-ok"});
+      S.lastLock={team:ti,card:ci,stage,owner,points:totalAdd,bonus,values:[...t.cards[ci]],interest:(t.interests&&t.interests[ci])||""};
     }
-    save();
-
-    // pause timer while overlay is open
-    stopTimer();
-    showOverlay(title, ownerText, percent, items);
+    save(); stopTimer(); showOverlay(title,ownerText,percent,items);
   });
 
-  function showOverlay(title, ownerText, percent, items){
-    $("#overlayTitle").textContent=title; $("#overlayOwner").textContent=ownerText;
-    $("#overlayPB").style.width=percent+"%";
-    const tags=$("#overlayStats"); tags.innerHTML="";
-    const list=$("#overlayList"); list.innerHTML="";
-    items.forEach(it=>{
-      const tag=document.createElement("span");
-      tag.className="tag "+(it.cls||""); tag.textContent=it.text; tags.appendChild(tag);
-      const li=document.createElement("li");
-      li.className=it.cls||""; li.textContent=it.text; list.appendChild(li);
-    });
+  function showOverlay(title,ownerText,percent,items){
+    $("#overlayTitle").textContent=title; $("#overlayOwner").textContent=ownerText; $("#overlayPB").style.width=percent+"%";
+    const tags=$("#overlayStats"); tags.innerHTML=""; const list=$("#overlayList"); list.innerHTML="";
+    items.forEach(it=>{ const tag=document.createElement("span"); tag.className="tag "+(it.cls||""); tag.textContent=it.text; tags.appendChild(tag);
+      const li=document.createElement("li"); li.className=it.cls||""; li.textContent=it.text; list.appendChild(li); });
     $("#overlay").classList.add("show");
   }
   $("#overlayClose").addEventListener("click", ()=>{
-    const TS=getTeamSize();
-    $("#overlay").classList.remove("show");
+    const TS=getTeamSize(); $("#overlay").classList.remove("show");
     if(S.currentCard<TS-1){ S.currentCard++; } else { S.currentCard=0; S.currentTeam=(S.currentTeam+1)%S.teams.length; }
-    advanceToNextPlayable();
-    save();
-    if(allTeamsComplete()){ S.endWhy="All teams completed."; S.scoringEnded=true; save(); showSection("end"); }
-    else { render(); }
+    advanceToNextPlayable(); save(); if(allTeamsComplete()){ S.endWhy="All teams completed."; S.scoringEnded=true; save(); showSection("end"); } else { render(); }
   });
   $("#overlayUndo").addEventListener("click", ()=>{
     const last=S.lastLock; if(!last){ alert("Nothing to undo."); return; }
-    const t=S.teams[last.team];
-    if(last.stage!=="baseline" && last.owner>=0){ S.totals[last.owner]=Math.max(0, S.totals[last.owner] - (last.points||0)); }
-    t.locked[last.card]=false; t.cards[last.card]=[].concat(last.values);
-    if(t.interests) t.interests[last.card]=last.interest||"";
-    S.currentTeam=last.team; S.currentCard=last.card; S.lastLock=null; save();
-    $("#overlay").classList.remove("show"); render();
+    const t=S.teams[last.team]; if(last.stage!=="baseline" && last.owner>=0){ S.totals[last.owner]=Math.max(0,S.totals[last.owner]-(last.points||0)); }
+    t.locked[last.card]=false; t.cards[last.card]=[...last.values]; if(t.interests) t.interests[last.card]=last.interest||"";
+    S.currentTeam=last.team; S.currentCard=last.card; S.lastLock=null; save(); $("#overlay").classList.remove("show"); render();
   });
 
-  // -------- Intake --------
-  $("#toIntake").addEventListener("click", ()=>{ showSection("intake"); });
-  $("#toFinal").addEventListener("click", ()=>{ showSection("final"); });
+  $("#toIntake").addEventListener("click", ()=>showSection("intake"));
+  $("#toFinal").addEventListener("click", ()=>showSection("final"));
 
-  function buildIntakeRows(){
-    const wrap=$("#intakeRows"); wrap.innerHTML="";
-    const remaining=Math.max(1, (S.participants||0)-totalEnteredCards());
-    for(let i=0;i<remaining;i++) addIntakeRow();
-  }
+  function buildIntakeRows(){ const wrap=$("#intakeRows"); wrap.innerHTML=""; const remaining=Math.max(1,(S.participants||0)-totalEnteredCards()); for(let i=0;i<remaining;i++) addIntakeRow(); }
   function addIntakeRow(){
-    const wrap=$("#intakeRows");
-    const row=document.createElement("div"); row.className="row"; row.style.flexWrap="nowrap"; row.style.gap="8px";
+    const wrap=$("#intakeRows"); const row=document.createElement("div"); row.className="row"; row.style.flexWrap="nowrap"; row.style.gap="8px";
     const name=document.createElement("input"); name.type="text"; name.placeholder="Name"; name.style.minWidth="120px";
-    const inputs=[];
-    for(let i=0;i<4;i++){
-      const n=document.createElement("input");
-      n.type="number"; n.min="0"; n.max="20"; n.step="1"; n.placeholder=skillNames()[i]; n.style.width="80px"; inputs.push(n);
-    }
-    let sel = null;
-    if(curatedActive()){
-      sel=document.createElement("select");
-      const items=S.curated.filter(x=>x && x.trim());
-      const opt0=document.createElement("option"); opt0.value=""; opt0.textContent="— interest —"; sel.appendChild(opt0);
-      items.forEach(it=>{ const o=document.createElement("option"); o.value=it; o.textContent=it; sel.appendChild(o); });
-    }
+    const inputs=[]; for(let i=0;i<4;i++){ const n=document.createElement("input"); n.type="number"; n.min="0"; n.max="20"; n.step="1"; n.placeholder=skillNames()[i]; n.style.width="80px"; inputs.push(n); }
+    let sel=null; if(curatedActive()){ sel=document.createElement("select"); const items=S.curated.filter(x=>x && x.trim()); const opt0=document.createElement("option"); opt0.value=""; opt0.textContent="— interest —"; sel.appendChild(opt0); items.forEach(it=>{ const o=document.createElement("option"); o.value=it; o.textContent=it; sel.appendChild(o); }); }
     const sumTag=document.createElement("span"); sumTag.className="tag"; sumTag.textContent="Sum: 0/20";
-    function update(){
-      const s=inputs.reduce((a,b)=>a+(parseInt(b.value||"0",10)||0),0);
-      sumTag.textContent=`Sum: ${s}/20`;
-      sumTag.className="tag "+(s===20?"sum-ok":(s<20?"sum-under":"sum-over"));
-    }
+    function update(){ const s=inputs.reduce((a,b)=>a+(parseInt(b.value||"0",10)||0),0); sumTag.textContent=`Sum: ${s}/20`; sumTag.className="tag "+(s===20?"sum-ok":(s<20?"sum-under":"sum-over")); }
     inputs.forEach(n=>n.addEventListener("input", update));
-    row.appendChild(name); inputs.forEach(n=>row.appendChild(n));
-    if(sel){ row.appendChild(sel); }
-    row.appendChild(sumTag); wrap.appendChild(row);
+    row.appendChild(name); inputs.forEach(n=>row.appendChild(n)); if(sel) row.appendChild(sel); row.appendChild(sumTag); wrap.appendChild(row);
   }
   $("#addRow").addEventListener("click", addIntakeRow);
 
   $("#assignAuto").addEventListener("click", ()=>{
     const rows=Array.from($("#intakeRows").children); const cards=[];
-    rows.forEach(r=>{
-      const name=r.querySelector('input[type="text"]').value.trim()||"Unnamed";
+    rows.forEach(r=>{ const name=r.querySelector('input[type="text"]').value.trim()||"Unnamed";
       const nums=Array.from(r.querySelectorAll('input[type="number"]')).map(n=>parseInt(n.value||"0",10)||0);
-      const sel = r.querySelector('select');
-      const interest = sel ? (sel.value||"") : "";
-      if(sum(nums)===20) cards.push({name, values:nums, interest});
-    });
+      const sel=r.querySelector('select'); const interest=sel?(sel.value||""):""; if(sum(nums)===20) cards.push({name,values:nums,interest}); });
     if(cards.length===0){ alert("No valid rows (sum=20) to assign."); return; }
 
-    function presentCountForTeamIndex(team){
-      const TS=getTeamSize(); let k=0;
-      for(let ci=0;ci<TS;ci++){
-        const vals=team.cards[ci]||[0,0,0,0]; const n=(team.names[ci]||"").trim();
-        if(team.locked[ci] || n || vals.some(v=>v>0)) k++;
-      }
-      return k;
-    }
-    function predPoints(team, stageIdx, candVals){
-      const TS=getTeamSize();
-      const sums=teamSumUpTo(team, Math.min(stageIdx-1, TS-1));
-      for(let k=0;k<4;k++) sums[k]+=candVals[k];
-      const target = 5*stageIdx;
-      const r = stagePointsFromSums(sums, target);
-      return r.pts;
-    }
-    function placeCardInTeam(team, card){
-      const TS=getTeamSize();
-      for(let i=0;i<TS;i++){
-        if(!(team.names[i]||"").trim() && sum(team.cards[i])===0 && !team.locked[i]){
-          team.names[i]=card.name; team.cards[i]=[].concat(card.values); team.locked[i]=true; if(team.interests) team.interests[i]=card.interest||""; return true;
-        }
-      }
-      for(let i=0;i<TS;i++){
-        if(!team.locked[i]){
-          if(!team.names[i]) team.names[i]=card.name;
-          team.cards[i]=[].concat(card.values); team.locked[i]=true; if(team.interests) team.interests[i]=card.interest||""; return true;
-        }
-      }
+    function presentCount(t){ const TS=getTeamSize(); let k=0; for(let i=0;i<TS;i++){ const v=t.cards[i]||[0,0,0,0]; const n=(t.names[i]||"").trim(); if(t.locked[i]||n||v.some(x=>x>0)) k++; } return k; }
+    function predPoints(team,stageIdx,cvals){ const TS=getTeamSize(); const sums=teamSumUpTo(team, Math.min(stageIdx-1,TS-1)); for(let k=0;k<4;k++) sums[k]+=cvals[k]; const target=5*stageIdx; return stagePointsFromSums(sums,target).pts; }
+    function placeCardInTeam(team,card){ const TS=getTeamSize();
+      for(let i=0;i<TS;i++){ if(!(team.names[i]||"").trim() && sum(team.cards[i])===0 && !team.locked[i]){ team.names[i]=card.name; team.cards[i]=card.values.slice(); team.locked[i]=true; team.interests[i]=card.interest||""; return true; } }
+      for(let i=0;i<TS;i++){ if(!team.locked[i]){ if(!team.names[i]) team.names[i]=card.name; team.cards[i]=card.values.slice(); team.locked[i]=true; team.interests[i]=card.interest||""; return true; } }
       return false;
     }
 
-    const pool=cards.slice();
-    const TS=getTeamSize();
-    const BASE = plannedBaseTeams();
-    const baseTeams=S.teams.slice(0,BASE);
-    const eligibleTeams=(S.remainderMode==="distribute") ? baseTeams.filter(t=>presentCountForTeamIndex(t)>0) : baseTeams;
+    const pool=cards.slice(); const TS=getTeamSize(); const BASE=plannedBaseTeams(); const baseTeams=S.teams.slice(0,BASE);
+    const eligible=(S.remainderMode==="distribute")?baseTeams.filter(t=>presentCount(t)>0):baseTeams;
 
-    // Pass 1: Fill to base size by maximizing immediate stage gain
     while(pool.length){
-      const allFull = eligibleTeams.length>0 && eligibleTeams.every(t=>t.locked.slice(0,TS).filter(Boolean).length>=TS);
-      if(allFull) break;
+      const allFull=eligible.length>0 && eligible.every(t=> t.locked.slice(0,TS).filter(Boolean).length>=TS ); if(allFull) break;
       let best=null;
-      for(let ti=0;ti<eligibleTeams.length;ti++){
-        const team=eligibleTeams[ti]; const realTi=S.teams.indexOf(team);
+      for(let ti=0;ti<eligible.length;ti++){
+        const team=eligible[ti]; const realTi=S.teams.indexOf(team);
         if(team.locked.slice(0,TS).filter(Boolean).length>=TS) continue;
-        const present = presentCountForTeamIndex(team);
-        const stageIdx = Math.max(2, Math.min(TS, present+1));
-        for(let ci=0;ci<pool.length;ci++){
-          const card=pool[ci]; const pts= predPoints(team, stageIdx, card.values);
-          const score=pts + 10;
-          if(!best || score>best.score){ best={ti:realTi, ci, score}; }
-        }
+        const stageIdx=Math.max(2, Math.min(TS, presentCount(team)+1));
+        for(let ci=0;ci<pool.length;ci++){ const card=pool[ci]; const pts=predPoints(team,stageIdx,card.values); const score=pts+10; if(!best || score>best.score) best={ti:realTi,ci,score}; }
       }
       if(!best) break;
-      const card=pool.splice(best.ci,1)[0];
-      const ok=placeCardInTeam(S.teams[best.ti], card);
+      const card=pool.splice(best.ci,1)[0]; const ok=placeCardInTeam(S.teams[best.ti], card);
       if(!ok){ (S.teams[best.ti].extras ||= []).push({name:card.name, values:card.values, interest:card.interest||""}); }
     }
 
-    // Pass 2: Leftovers -> distribute or own team (keep interest)
     const leftovers=pool.slice();
     if(leftovers.length){
       if(S.remainderMode==="ownTeam"){
         let overflow=S.teams[BASE]; if(!overflow){ overflow=defaultTeam(BASE,TS); S.teams.push(overflow); }
         for(const c of leftovers.splice(0,TS)){
-          for(let i=0;i<TS;i++){
-            if(sum(overflow.cards[i])===0 && !overflow.names[i]){
-              overflow.cards[i]=[].concat(c.values); overflow.names[i]=c.name; overflow.interests[i]=c.interest||""; overflow.locked[i]=true; break;
-            }
-          }
+          for(let i=0;i<TS;i++){ if(sum(overflow.cards[i])===0 && !overflow.names[i]){ overflow.cards[i]=c.values.slice(); overflow.names[i]=c.name; overflow.interests[i]=c.interest||""; overflow.locked[i]=true; break; } }
         }
         leftovers.forEach(c=>{ (overflow.extras ||= []).push({name:c.name, values:c.values, interest:c.interest||""}); });
       }else{
-        function extraScore(team,cand){
-          const target = 5*(TS+1);
-          const base=[0,0,0,0];
-          for(let i=0;i<TS;i++){ const v=team.cards[i]||[0,0,0,0]; for(let k=0;k<4;k++) base[k]+=v[k]; }
-          for(let k=0;k<4;k++) base[k]+=cand.values[k];
-          let pts=0; for(let k=0;k<4;k++){ const d=Math.abs(target-base[k]); pts+=target-d; } return pts;
-        }
-        const given = new Array(BASE).fill(0);
+        function extraScore(team,cand){ const target=5*(TS+1); const base=[0,0,0,0]; for(let i=0;i<TS;i++){ const v=team.cards[i]||[0,0,0,0]; for(let k=0;k<4;k++) base[k]+=v[k]; } for(let k=0;k<4;k++) base[k]+=cand.values[k]; let pts=0; for(let k=0;k<4;k++){ const d=Math.abs(target-base[k]); pts+=target-d; } return pts; }
+        const given=new Array(BASE).fill(0);
         for(let round=0; round<BASE && leftovers.length; round++){
           let bestTeam=-1, bestScore=-Infinity;
-          for(let ti=0; ti<BASE; ti++){
-            if(given[ti] >= 1) continue;
-            const sc = extraScore(S.teams[ti], leftovers[0]);
-            if(sc > bestScore){ bestScore=sc; bestTeam=ti; }
-          }
-          if(bestTeam !== -1){
-            const pick = leftovers.shift();
-            (S.teams[bestTeam].extras ||= []).push({name:pick.name, values:pick.values, interest:pick.interest||""});
-            given[bestTeam]++;
-          } else break;
+          for(let ti=0; ti<BASE; ti++){ if(given[ti]>=1) continue; const sc=extraScore(S.teams[ti], leftovers[0]); if(sc>bestScore){ bestScore=sc; bestTeam=ti; } }
+          if(bestTeam!==-1){ const pick=leftovers.shift(); (S.teams[bestTeam].extras ||= []).push({name:pick.name, values:pick.values, interest:pick.interest||""}); given[bestTeam]++; } else break;
         }
         while(leftovers.length){
-          let overflow = S.teams.find((t,idx)=> idx>=BASE && (t.locked?.slice(0,TS).filter(Boolean).length||0) < TS);
-          if(!overflow){ overflow = defaultTeam(S.teams.length, TS); S.teams.push(overflow); }
-          for(let i=0;i<TS && leftovers.length;i++){
-            if(sum(overflow.cards[i])===0 && !overflow.names[i]){
-              const c = leftovers.shift();
-              overflow.cards[i]=[].concat(c.values);
-              overflow.names[i]=c.name;
-              overflow.interests[i]=c.interest||"";
-              overflow.locked[i]=true;
-            }
-          }
+          let overflow=S.teams.find((t,idx)=> idx>=BASE && (t.locked?.slice(0,TS).filter(Boolean).length||0) < TS);
+          if(!overflow){ overflow=defaultTeam(S.teams.length,TS); S.teams.push(overflow); }
+          for(let i=0;i<TS && leftovers.length;i++){ if(sum(overflow.cards[i])===0 && !overflow.names[i]){ const c=leftovers.shift(); overflow.cards[i]=c.values.slice(); overflow.names[i]=c.name; overflow.interests[i]=c.interest||""; overflow.locked[i]=true; } }
         }
       }
     }
-
     save(); showSection("final");
   });
 
-  // Exports / restart
-  function download(filename,text,mime){
-    const blob=new Blob([text],{type:mime||"text/plain"});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement("a"); a.href=url; a.download=filename;
-    document.body.appendChild(a); a.click();
-    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },200);
-  }
-  $("#exportCSV").addEventListener("click", ()=>{
-    const TS=getTeamSize();
-    const rows=[["Team","Slot","Name"].concat(skillNames()).concat(["Interest"])];
-    S.teams.forEach((t,i)=>{
-      for(let k=0;k<TS;k++){ rows.push([`Team ${i+1}`, String(k+1), t.names[k]||"", ...(t.cards[k]||[0,0,0,0]), (t.interests&&t.interests[k])||""]); }
-      if(t.extras && t.extras.length){ t.extras.forEach((ex,idx)=>{ rows.push([`Team ${i+1}`, String(TS+idx+1), ex.name||"", ...(ex.values||[0,0,0,0]), ex.interest||""]); }); }
-    });
-    const csv=rows.map(r=>r.map(v=>String(v).includes(",")?`"${String(v).replace(/"/g,'""')}"`:String(v)).join(",")).join("\n");
-    download("teams.csv", csv, "text/csv");
-  });
-  $("#exportJSON").addEventListener("click", ()=>{
-    const out={
-      groupNames:S.groupNames,
-      skills:S.skills,
-      teamSize:getTeamSize(),
-      normalize:S.normalize,
-      remainderMode:S.remainderMode,
-      curated:S.curated,
-      timerSeconds:S.timerSeconds,
-      teams:S.teams.map(t=>({
-        cards:t.cards, names:t.names, interests:t.interests, locked:t.locked, extras:(t.extras||[]),
-        pairToGroup:t.pairToGroup, tripToGroup:t.tripToGroup, quadToGroup:t.quadToGroup
-      }))
-    };
-    download("teams.json", JSON.stringify(out,null,2), "application/json");
-  });
+  function download(filename,text,mime){ const blob=new Blob([text],{type:mime||"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },200); }
+  $("#exportCSV").addEventListener("click", ()=>{ const TS=getTeamSize(); const rows=[["Team","Slot","Name"].concat(skillNames()).concat(["Interest"])]; S.teams.forEach((t,i)=>{ for(let k=0;k<TS;k++){ rows.push([`Team ${i+1}`, String(k+1), t.names[k]||"", ...(t.cards[k]||[0,0,0,0]), (t.interests&&t.interests[k])||""]); } if(t.extras && t.extras.length){ t.extras.forEach((ex,idx)=>{ rows.push([`Team ${i+1}`, String(TS+idx+1), ex.name||"", ...(ex.values||[0,0,0,0]), ex.interest||""]); }); } }); const csv=rows.map(r=>r.map(v=>String(v).includes(",")?`"${String(v).replace(/"/g,'""')}"`:String(v)).join(",")).join("\n"); download("teams.csv",csv,"text/csv"); });
+  $("#exportJSON").addEventListener("click", ()=>{ const out={groupNames:S.groupNames, skills:S.skills, teamSize:getTeamSize(), normalize:S.normalize, remainderMode:S.remainderMode, curated:S.curated, timerSeconds:S.timerSeconds, teams:S.teams.map(t=>({cards:t.cards, names:t.names, interests:t.interests, locked:t.locked, extras:(t.extras||[]), pairToGroup:t.pairToGroup, tripToGroup:t.tripToGroup, quadToGroup:t.quadToGroup}))}; download("teams.json", JSON.stringify(out,null,2), "application/json"); });
   $("#restart").addEventListener("click", ()=>{ if(confirm("This clears storage and reloads.")){ localStorage.removeItem(LSKEY); location.reload(); } });
 
-  // --- Debug helper: Ctrl+Q fills current card with dummy data ---
-  document.addEventListener("keydown", (e)=>{
-    if(e.ctrlKey && e.key.toLowerCase()==="q"){
-      e.preventDefault();
-      const ti = S.currentTeam, ci = S.currentCard;
-      const t = S.teams[ti];
-      const rnd = Math.floor(Math.random()*1000);
-      t.names[ci] = "Debug_" + rnd;
-      const nameEl = $("#studentName"); if(nameEl) nameEl.value = t.names[ci];
-      t.cards[ci] = [5,5,5,5];
-      $$("#skillInputs input").forEach(inp=>{ inp.value = 5; });
-      if(curatedActive()){
-        const items = S.curated.filter(x=>x && x.trim());
-        if(items.length>=2){
-          const pick = items[Math.floor(Math.random()*items.length)];
-          t.interests[ci] = pick; const sel = $("#interestSelect"); if(sel) sel.value = pick;
-        }
-      }
-      save(); updateSumLine(ti,ci);
+  const SETUP_INTEREST_PRESET = ["Puzzle","Roguelike","RPG","Adventure","Sim / Management","Platformer","Metroidvania","Beat ’em Up","Fighting","Shoot ’em Up"];
+  document.addEventListener("keydown",(e)=>{
+    if(!(e.ctrlKey && e.key.toLowerCase()==="q")) return;
+    e.preventDefault();
+
+    if(!S.setupDone){
+      const inputs = Array.from(document.querySelectorAll("#dInterestInputs input[type='text']"));
+      inputs.forEach((el, idx)=>{ el.value = SETUP_INTEREST_PRESET[idx] || ""; });
+      S.curated = inputs.map(el => (el.value||"").trim()).filter(Boolean).slice(0,10);
+      save();
+      return;
     }
+
+    const ti=S.currentTeam, ci=S.currentCard, t=S.teams[ti];
+    const rnd=Math.floor(Math.random()*1000);
+    t.names[ci]="Debug_"+rnd; const nameEl=$("#studentName"); if(nameEl) nameEl.value=t.names[ci];
+    t.cards[ci]=[5,5,5,5]; $$("#skillInputs input").forEach(inp=>inp.value=5);
+    if(curatedActive()){
+      const items=S.curated.filter(x=>x && x.trim());
+      if(items.length>=2){
+        const pick=items[Math.floor(Math.random()*items.length)];
+        t.interests[ci]=pick; const sel=$("#interestSelect"); if(sel) sel.value=pick;
+      }
+    }
+    save(); updateSumLine(ti,ci);
   });
 
-  // Kick off
   render();
 })();
 </script>
